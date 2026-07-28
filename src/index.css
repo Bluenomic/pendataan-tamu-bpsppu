@@ -365,3 +365,71 @@ body {
   }
 }
 
+/* ==========================================================================
+   Responsive Layout & Touch Optimizations for Mobile & Tablet (Portrait)
+   ========================================================================== */
+
+.form-preview-layout {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.responsive-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.full-width-field {
+  grid-column: span 2;
+}
+
+.form-card-padding {
+  padding: 1.75rem;
+}
+
+/* Tablet & Mobile Breakpoint (< 900px) */
+@media (max-width: 900px) {
+  .form-preview-layout {
+    grid-template-columns: 1fr !important;
+    gap: 1.25rem;
+  }
+  
+  .form-card-padding {
+    padding: 1.25rem !important;
+  }
+}
+
+/* Small Mobile Breakpoint (< 640px) */
+@media (max-width: 640px) {
+  .responsive-form-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+  }
+
+  .full-width-field {
+    grid-column: span 1 !important;
+  }
+
+  .full-width-field-mobile {
+    grid-column: span 1 !important;
+  }
+
+  .form-card-padding {
+    padding: 1rem !important;
+  }
+
+  .form-input, .form-select {
+    font-size: 0.95rem !important;
+    min-height: 44px;
+  }
+
+  .btn-submit-touch {
+    min-height: 48px;
+    font-size: 1rem !important;
+  }
+}
+
+

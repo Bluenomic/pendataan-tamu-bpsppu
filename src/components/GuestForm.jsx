@@ -53,15 +53,17 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     'Tim Pengolahan & TI'
   ];
 
-  // Signature Canvas Handlers
+  // Signature Canvas Handlers (Touch & Mouse)
   const startDrawing = (e) => {
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || e.touches[0].clientX) - rect.left;
-    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
@@ -72,8 +74,10 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
-    const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
     ctx.lineTo(x, y);
     ctx.strokeStyle = '#024282';
     ctx.lineWidth = 2.5;
@@ -150,26 +154,29 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
   };
 
   return (
-    <div style={{ padding: '0 1rem 2rem 1rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+    <div style={{ padding: '0 0.75rem 2rem 0.75rem', maxWidth: '1200px', margin: '0 auto' }}>
+      
+      {/* Main Responsive Grid Layout */}
+      <div className="form-preview-layout">
         
-        {/* Form Container */}
-        <div className="glass-panel" style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '1rem' }}>
-            <div style={{ background: '#024282', padding: '0.5rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* 1. Form Container */}
+        <div className="glass-panel form-card-padding">
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.85rem' }}>
+            <div style={{ background: '#024282', padding: '0.5rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Sparkles size={20} color="#fff" />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Formulir Registrasi Kunjungan</h2>
+              <h2 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Formulir Registrasi Kunjungan</h2>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Silakan isi data tamu untuk mencetak Pass Kunjungan PST</p>
             </div>
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="responsive-form-grid">
               
               {/* Nama Lengkap */}
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <div className="form-group full-width-field">
                 <label className="form-label">
                   <User size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Nama Lengkap Tamu / Penanggung Jawab *
@@ -215,7 +222,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
 
               {/* Instansi / Alamat */}
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <div className="form-group full-width-field">
                 <label className="form-label">
                   <Building size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Asal Instansi / Perusahaan / Alamat *
@@ -231,7 +238,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
 
               {/* Pegawai / Unit Dituju */}
-              <div className="form-group">
+              <div className="form-group full-width-field-mobile">
                 <label className="form-label">
                   <Target size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Unit / Pegawai Dituju *
@@ -248,7 +255,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
 
               {/* Keperluan */}
-              <div className="form-group">
+              <div className="form-group full-width-field-mobile">
                 <label className="form-label">
                   <FileText size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Kategori Keperluan *
@@ -265,7 +272,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
 
               {/* Jumlah Rombongan */}
-              <div className="form-group">
+              <div className="form-group full-width-field-mobile">
                 <label className="form-label">
                   <Users size={14} style={{ display: 'inline', marginRight: '4px' }} />
                   Jumlah Tamu (Orang)
@@ -281,7 +288,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
 
               {/* Catatan / Detail Keperluan */}
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <div className="form-group full-width-field">
                 <label className="form-label">Catatan Tambahan / Detail Kunjungan</label>
                 <input 
                   type="text"
@@ -292,10 +299,10 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* Digital Signature Pad */}
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              {/* Digital Signature Pad - Touch Friendly */}
+              <div className="form-group full-width-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <label className="form-label">
+                  <label className="form-label" style={{ margin: 0 }}>
                     <PenTool size={14} style={{ display: 'inline', marginRight: '4px' }} />
                     Tanda Tangan Digital (Opsional)
                   </label>
@@ -308,7 +315,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                     <RotateCcw size={12} /> Hapus TTD
                   </button>
                 </div>
-                <div style={{ border: '1.5px dashed var(--bps-cyan)', borderRadius: '8px', background: 'var(--bps-card)', overflow: 'hidden' }}>
+                <div style={{ border: '1.5px dashed var(--bps-cyan)', borderRadius: '8px', background: 'var(--bps-card)', overflow: 'hidden', touchAction: 'none' }}>
                   <canvas 
                     ref={canvasRef}
                     width={500}
@@ -329,8 +336,8 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
 
             <button 
               type="submit" 
-              className="btn btn-primary"
-              style={{ width: '100%', padding: '0.85rem', marginTop: '1rem', fontSize: '0.95rem' }}
+              className="btn btn-primary btn-submit-touch"
+              style={{ width: '100%', padding: '0.85rem', marginTop: '1.25rem', fontSize: '0.95rem', fontWeight: '800' }}
             >
               <CheckCircle size={18} />
               Simpan & Cetak Pass Tamu
@@ -338,9 +345,9 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
           </form>
         </div>
 
-        {/* Live Pass Preview Card - FIXED DARK THEME BUG */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="glass-panel" style={{ padding: '1.5rem', background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
+        {/* 2. Live Pass Preview Card */}
+        <div className="preview-card-container">
+          <div className="glass-panel form-card-padding" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.75rem' }}>
               <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--bps-navy)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -350,23 +357,23 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
             </div>
 
             <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#024282', margin: '0 auto 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(2, 66, 130, 0.2)' }}>
-                <User size={32} color="#fff" />
+              <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#024282', margin: '0 auto 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(2, 66, 130, 0.2)' }}>
+                <User size={28} color="#fff" />
               </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)', wordBreak: 'break-word' }}>
                 {formData.nama || 'Nama Tamu'}
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.2rem 0 0.75rem', fontWeight: '600' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0.75rem', fontWeight: '600', wordBreak: 'break-word' }}>
                 {formData.instansi || 'Instansi / Perusahaan'}
               </p>
             </div>
 
-            <div style={{ background: 'var(--bps-bg)', padding: '1rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.85rem', border: '1px solid var(--bps-card-border)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ background: 'var(--bps-bg)', padding: '0.85rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.8rem', border: '1px solid var(--bps-card-border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                 <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Tujuan Unit:</span>
                 <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{formData.tujuan}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                 <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Keperluan:</span>
                 <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{formData.keperluan}</span>
               </div>
@@ -382,8 +389,8 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
             </div>
 
-            <div style={{ marginTop: '1.25rem', padding: '0.75rem', background: 'rgba(0, 153, 219, 0.08)', border: '1px solid rgba(0, 153, 219, 0.2)', borderRadius: '8px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-              📌 Data tamu akan otomatis disimpan ke sistem lokal & disinkronkan ke Google Sheets jika tersambung.
+            <div style={{ marginTop: '1rem', padding: '0.65rem', background: 'rgba(0, 153, 219, 0.08)', border: '1px solid rgba(0, 153, 219, 0.2)', borderRadius: '8px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+              📌 Data tamu akan otomatis disimpan ke sistem & disinkronkan ke Google Sheets.
             </div>
 
           </div>
