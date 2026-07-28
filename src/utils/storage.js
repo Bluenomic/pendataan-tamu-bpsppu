@@ -5,163 +5,147 @@ const CONFIG_KEY = 'bps_ppu_buku_tamu_config_v2';
 
 export const INITIAL_GUEST_DATA = [];
 
-// Fetch All Guests (Tries SQLite Backend first, falls back to localStorage)
-export const getGuestDataAsync = async () => {
+// PUBLIC API: Register guest from Kiosk (No PIN needed)
+export const saveSingleGuestAsync = async (guest) => {
   try {
-    const response = await fetch('/api/guests');
+    await fetch('/api/public/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(guest)
+    });
+  } catch (e) {
+    console.error('[Public API] Failed to save guest to SQLite:', e);
+  }
+};
+
+// ADMIN API: Fetch all guests for Admin Table (EXPLICIT PIN REQUIRED)
+export const getGuestDataAsync = async (adminPin) => {
+  if (!adminPin) {
+    return [];
+  }
+
+  try {
+    const response = await fetch('/api/admin/guests', {
+      headers: { 'x-admin-pin': adminPin }
+    });
     if (response.ok) {
       const resData = await response.json();
       if (resData.success && resData.data) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(resData.data));
         return resData.data;
       }
     }
   } catch (e) {
-    console.warn('[SQLite Backend] Backend server not reachable, using localStorage fallback');
+    console.warn('[Admin API] Backend not reachable or PIN invalid');
   }
 
-  // Fallback to localStorage
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_GUEST_DATA));
-      return INITIAL_GUEST_DATA;
-    }
-    return JSON.parse(data);
-  } catch (e) {
-    return INITIAL_GUEST_DATA;
-  }
+  return [];
 };
 
 export const getGuestData = () => {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_GUEST_DATA));
-      return INITIAL_GUEST_DATA;
-    }
-    return JSON.parse(data);
-  } catch (e) {
-    return INITIAL_GUEST_DATA;
-  }
+  return [];
 };
 
-// Add Single Guest to SQLite Database & LocalStorage
-export const saveSingleGuestAsync = async (guest) => {
+// ADMIN API: Update Single Guest (EXPLICIT PIN REQUIRED)
+export const updateSingleGuestAsync = async (guest, adminPin) => {
+  if (!adminPin) return;
   try {
-    await fetch('/api/guests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(guest)
-    });
-  } catch (e) {
-    console.error('[SQLite Backend] Failed to save guest to SQLite:', e);
-  }
-};
-
-// Update Single Guest in SQLite Database
-export const updateSingleGuestAsync = async (guest) => {
-  try {
-    await fetch(`/api/guests/${encodeURIComponent(guest.id)}`, {
+    await fetch(`/api/admin/guests/${encodeURIComponent(guest.id)}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': adminPin
+      },
       body: JSON.stringify(guest)
     });
   } catch (e) {
-    console.error('[SQLite Backend] Failed to update guest in SQLite:', e);
+    console.error('[Admin API] Failed to update guest in SQLite:', e);
   }
 };
 
-// Delete Single Guest in SQLite Database
-export const deleteSingleGuestAsync = async (id) => {
+// ADMIN API: Delete Single Guest (EXPLICIT PIN REQUIRED)
+export const deleteSingleGuestAsync = async (id, adminPin) => {
+  if (!adminPin) return;
   try {
-    await fetch(`/api/guests/${encodeURIComponent(id)}`, {
-      method: 'DELETE'
+    await fetch(`/api/admin/guests/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'x-admin-pin': adminPin }
     });
   } catch (e) {
-    console.error('[SQLite Backend] Failed to delete guest from SQLite:', e);
+    console.error('[Admin API] Failed to delete guest from SQLite:', e);
   }
 };
 
-// Import Array of Guests to SQLite Database
-export const importGuestsAsync = async (guestList) => {
+// ADMIN API: Batch Import Guests (EXPLICIT PIN REQUIRED)
+export const importGuestsAsync = async (guestList, adminPin) => {
+  if (!adminPin) return;
   try {
-    await fetch('/api/guests/import', {
+    await fetch('/api/admin/guests/import', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': adminPin
+      },
       body: JSON.stringify(guestList)
     });
   } catch (e) {
-    console.error('[SQLite Backend] Failed to import guests to SQLite:', e);
+    console.error('[Admin API] Failed to import guests to SQLite:', e);
   }
 };
 
-export const saveGuestData = (guests) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
-  } catch (e) {
-    console.error('Failed to save guest data locally:', e);
-  }
-};
+export const saveGuestData = (guests) => {};
 
-// Config Async Operations
+// PUBLIC API: Fetch Public Config (No PIN)
 export const getAppConfigAsync = async () => {
   try {
-    const response = await fetch('/api/config');
+    const response = await fetch('/api/public/config');
     if (response.ok) {
       const resData = await response.json();
       if (resData.success && resData.data) {
-        localStorage.setItem(CONFIG_KEY, JSON.stringify(resData.data));
         return resData.data;
       }
     }
   } catch (e) {
-    console.warn('[SQLite Backend] Config endpoint fallback to localStorage');
+    console.warn('[Public API] Config fallback');
   }
   return getAppConfig();
 };
 
 export const getAppConfig = () => {
-  try {
-    const config = localStorage.getItem(CONFIG_KEY);
-    return config ? JSON.parse(config) : {
-      webhookUrl: '',
-      autoSync: true,
-      officeName: 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
-      subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
-      address: 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411'
-    };
-  } catch (e) {
-    return {
-      webhookUrl: '',
-      autoSync: true,
-      officeName: 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
-      subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
-      address: 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411'
-    };
-  }
+  return {
+    webhookUrl: '',
+    autoSync: true,
+    officeName: 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
+    subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
+    address: 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411'
+  };
 };
 
-export const saveAppConfigAsync = async (config) => {
+// ADMIN API: Save Config (PIN HEADER & BODY SENT)
+export const saveAppConfigAsync = async (config, adminPin) => {
+  const pin = adminPin || config.adminPin;
+  if (!pin) {
+    console.error('[Admin API] Cannot save config: missing adminPin!');
+    return { success: false, error: 'Missing adminPin' };
+  }
+
   try {
-    await fetch('/api/config', {
+    const response = await fetch('/api/admin/config', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': pin 
+      },
       body: JSON.stringify(config)
     });
+    const resData = await response.json();
+    return resData;
   } catch (e) {
-    console.error('Failed to save config in SQLite:', e);
+    console.error('[Admin API] Failed to save config in SQLite:', e);
+    return { success: false, error: e.message };
   }
-  saveAppConfig(config);
 };
 
-export const saveAppConfig = (config) => {
-  try {
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-  } catch (e) {
-    console.error('Failed to save config:', e);
-  }
-};
+export const saveAppConfig = (config) => {};
 
 // Export Guest Data to Excel File
 export const exportToExcel = (guestList, fileName = 'Buku_Tamu_BPS_PPU.xlsx') => {
@@ -183,8 +167,6 @@ export const exportToExcel = (guestList, fileName = 'Buku_Tamu_BPS_PPU.xlsx') =>
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(formattedData);
-  
-  // Set Auto Column Widths
   const colWidths = Object.keys(formattedData[0] || {}).map(key => ({
     wch: Math.max(key.length + 3, 15)
   }));

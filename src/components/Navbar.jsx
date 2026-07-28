@@ -11,17 +11,21 @@ import {
   AlertCircle,
   X,
   MapPin,
-  Clock
+  Clock,
+  Lock,
+  Unlock
 } from 'lucide-react';
 
 export default function Navbar({ 
   activeTab, 
-  setActiveTab, 
+  onRequestTabSwitch, 
   theme, 
   toggleTheme, 
   config, 
   openConfigModal,
-  totalCount 
+  totalCount,
+  isAdminUnlocked,
+  onLockAdmin 
 }) {
   const [showBanner, setShowBanner] = useState(true);
   const isSheetsConnected = Boolean(config?.webhookUrl);
@@ -80,11 +84,11 @@ export default function Navbar({
             </div>
           </div>
 
-          {/* Navigation Tabs (Beranda, Layanan, Spreadsheet View, Analytics) */}
+          {/* Navigation Tabs (Input Tamu, Tabel Spreadsheet, Analytics) */}
           <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button 
               className={`bps-tab-btn ${activeTab === 'form' ? 'active' : ''}`}
-              onClick={() => setActiveTab('form')}
+              onClick={() => onRequestTabSwitch('form')}
             >
               <UserPlus size={16} />
               Input Tamu PST
@@ -92,10 +96,12 @@ export default function Navbar({
             
             <button 
               className={`bps-tab-btn ${activeTab === 'table' ? 'active' : ''}`}
-              onClick={() => setActiveTab('table')}
+              onClick={() => onRequestTabSwitch('table')}
+              title={isAdminUnlocked ? 'Buka Tabel Spreadsheet Data Tamu' : 'Diperlukan PIN Admin untuk melihat/mengedit tabel'}
             >
               <FileSpreadsheet size={16} />
               Tabel Spreadsheet
+              {!isAdminUnlocked && <Lock size={12} color="#fbbf24" style={{ marginLeft: '2px' }} />}
               {totalCount > 0 && (
                 <span style={{ 
                   background: '#0099db',
@@ -112,16 +118,61 @@ export default function Navbar({
 
             <button 
               className={`bps-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-              onClick={() => setActiveTab('analytics')}
+              onClick={() => onRequestTabSwitch('analytics')}
+              title={isAdminUnlocked ? 'Buka Analitik Kunjungan' : 'Diperlukan PIN Admin'}
             >
               <BarChart3 size={16} />
               Analitik
+              {!isAdminUnlocked && <Lock size={12} color="#fbbf24" style={{ marginLeft: '2px' }} />}
             </button>
           </nav>
 
-          {/* Right Action Icons & Sync Status */}
+          {/* Right Action Icons & Admin Mode Lock Toggle */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             
+            {/* Mode Access Badge & Lock Button */}
+            {isAdminUnlocked ? (
+              <button 
+                onClick={onLockAdmin}
+                title="Kunci Akses Admin (Kembali ke Mode Tamu)"
+                style={{
+                  background: '#16a34a',
+                  border: '1px solid #22c55e',
+                  color: '#ffffff',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                <Unlock size={14} /> Mode Admin (Kunci)
+              </button>
+            ) : (
+              <button 
+                onClick={() => onRequestTabSwitch('table')}
+                title="Login / Buka Akses Petugas Admin"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#fbbf24',
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem'
+                }}
+              >
+                <Lock size={14} /> Mode Tamu (Unlock)
+              </button>
+            )}
+
             {/* Google Sheets Sync Badge */}
             <button 
               onClick={openConfigModal}
@@ -155,7 +206,7 @@ export default function Navbar({
             {/* Settings Button */}
             <button 
               onClick={openConfigModal}
-              title="Pengaturan"
+              title="Pengaturan Aplikasi & Ubah PIN Admin"
               style={{
                 background: 'rgba(255, 255, 255, 0.1)',
                 border: '1px solid rgba(255, 255, 255, 0.2)',
