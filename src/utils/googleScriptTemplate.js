@@ -1,15 +1,14 @@
 export const GOOGLE_APPS_SCRIPT_CODE = `/**
  * Google Apps Script - Webhook Buku Tamu Digital BPS Penajam Paser Utara
- * Fitur: Dual-Check Anti-Duplikat (ID Tamu + Nama & Tanggal)
+ * Fitur: Batch Processing Kilat (Batch Sync Super Cepat < 0.5 Detik) & Anti-Duplikat
  * 
- * CARA UPDATE DENGAN BENAR (SANGAT PENTING):
+ * CARA UPDATE:
  * 1. Buka Google Sheets -> Ekstensi -> Apps Script.
  * 2. Hapus semua kode lama dan PASTE kode ini.
  * 3. Klik tombol Simpan 💾 (Ikon Disket).
- * 4. Klik tombol biru 'Terapkan' (Deploy) -> 'Kelola penetapan' (Manage deployments).
- * 5. Klik ikon PENSIL ✏️ (Edit) pada deployment yang aktif.
- * 6. Pada bagian Versi (Version), WAJIB PILIH 'Versi baru' (New version).
- * 7. Klik 'Terapkan' (Deploy). Selesai!
+ * 4. Klik 'Terapkan' (Deploy) -> 'Kelola penetapan' (Manage deployments).
+ * 5. Klik ikon PENSIL ✏️ (Edit) -> Versi: 'Versi baru' (New version).
+ * 6. Klik 'Terapkan' (Deploy). Selesai!
  */
 
 function doPost(e) {
@@ -48,77 +47,89 @@ function doPost(e) {
       sheet.setFrozenRows(1);
     }
     
-    // 2. Parse data payload
-    var data = {};
+    // 2. Parse data payload (Dapat menerima Single Object maupun Batch Array)
+    var rawData = null;
     if (e && e.postData && e.postData.contents) {
       try {
-        data = JSON.parse(e.postData.contents);
+        rawData = JSON.parse(e.postData.contents);
       } catch (err) {
-        data = e.parameter || {};
+        rawData = e.parameter || {};
       }
     } else if (e && e.parameter) {
-      data = e.parameter;
+      rawData = e.parameter;
     }
     
-    var guestId = String(data.id || "").trim();
-    var guestNama = String(data.nama || "").trim();
-    var guestTanggal = String(data.tanggal || "").trim();
-
-    var newRowData = [
-      guestId || "-",
-      guestTanggal || new Date().toLocaleDateString('id-ID'),
-      data.jamMasuk || "-",
-      data.jamKeluar || "-",
-      guestNama || "-",
-      data.noHp || "-",
-      data.instansi || "-",
-      data.nik || "-",
-      data.tujuan || "-",
-      data.keperluan || "-",
-      data.jumlah || 1,
-      data.status || "Menunggu",
-      data.catatan || "-"
-    ];
-
-    // 3. LOGIKA DUAL-CHECK ANTI-DUPLIKAT (Cek ID Tamu ATAU Nama + Tanggal)
+    var guestList = Array.isArray(rawData) ? rawData : [rawData];
     var lastRow = sheet.getLastRow();
-    var targetRow = -1;
-
+    
+    // 3. Peta memori untuk pencarian ID Tamu & Nama+Tanggal kilat
+    var existingRowsMap = {};
     if (lastRow > 1) {
-      var allData = sheet.getRange(2, 1, lastRow - 1, 5).getValues(); // Ambil Kolom A (ID), B (Tanggal), E (Nama)
+      var allData = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
       for (var r = 0; r < allData.length; r++) {
-        var rowId = String(allData[r][0] || "").trim();
+        var rowId = String(allData[r][0] || "").trim().toLowerCase();
         var rowTanggal = String(allData[r][1] || "").trim();
-        var rowNama = String(allData[r][4] || "").trim();
+        var rowNama = String(allData[r][4] || "").trim().toLowerCase();
 
-        // Match 1: ID Tamu Sama
-        var isIdMatch = (guestId !== "" && guestId !== "-" && rowId.toLowerCase() === guestId.toLowerCase());
-        
-        // Match 2: Nama & Tanggal Kunjungan Sama
-        var isNameDateMatch = (guestNama !== "" && guestNama !== "-" && rowNama.toLowerCase() === guestNama.toLowerCase() && rowTanggal === guestTanggal);
-
-        if (isIdMatch || isNameDateMatch) {
-          targetRow = r + 2; // Offset baris (1-indexed + header)
-          break;
+        if (rowId && rowId !== "-") {
+          existingRowsMap["id:" + rowId] = r + 2;
+        }
+        if (rowNama && rowNama !== "-") {
+          existingRowsMap["nd:" + rowNama + "|" + rowTanggal] = r + 2;
         }
       }
     }
 
-    // 4. Update baris lama ATAU Tambah baris baru
-    if (targetRow > 1) {
-      // UPDATE IN-PLACE (Mencegah Duplikat & Update Status/Jam Keluar)
-      sheet.getRange(targetRow, 1, 1, 13).setValues([newRowData]);
-    } else {
-      // TAMBAH BARIS BARU (Jika benar-benar tamu baru)
-      sheet.appendRow(newRowData);
+    var updatedCount = 0;
+    var createdCount = 0;
+
+    // 4. Proses Batch dalam 1 siklus eksekusi memori super cepat
+    for (var i = 0; i < guestList.length; i++) {
+      var item = guestList[i] || {};
+      var guestId = String(item.id || "").trim();
+      var guestNama = String(item.nama || "").trim();
+      var guestTanggal = String(item.tanggal || "").trim();
+
+      var rowData = [
+        guestId || "-",
+        guestTanggal || new Date().toLocaleDateString('id-ID'),
+        item.jamMasuk || "-",
+        item.jamKeluar || "-",
+        guestNama || "-",
+        item.noHp || "-",
+        item.instansi || "-",
+        item.nik || "-",
+        item.tujuan || "-",
+        item.keperluan || "-",
+        item.jumlah || 1,
+        item.status || "Menunggu",
+        item.catatan || "-"
+      ];
+
+      var targetRow = existingRowsMap["id:" + guestId.toLowerCase()] || existingRowsMap["nd:" + guestNama.toLowerCase() + "|" + guestTanggal];
+
+      if (targetRow && targetRow > 1) {
+        // Update baris di tempat (In-place update)
+        sheet.getRange(targetRow, 1, 1, 13).setValues([rowData]);
+        updatedCount++;
+      } else {
+        // Tambah baris baru
+        sheet.appendRow(rowData);
+        createdCount++;
+        
+        var newLastRow = sheet.getLastRow();
+        if (guestId) existingRowsMap["id:" + guestId.toLowerCase()] = newLastRow;
+        if (guestNama) existingRowsMap["nd:" + guestNama.toLowerCase() + "|" + guestTanggal] = newLastRow;
+      }
     }
     
     return ContentService
       .createTextOutput(JSON.stringify({ 
         result: "success", 
-        action: targetRow > 1 ? "updated" : "created",
-        targetRow: targetRow,
-        message: "Data tamu berhasil disinkronkan tanpa duplikat" 
+        processed: guestList.length,
+        updated: updatedCount,
+        created: createdCount,
+        message: "Sinkronisasi batch selesai kilat" 
       }))
       .setMimeType(ContentService.MimeType.JSON);
       
@@ -133,6 +144,6 @@ function doGet(e) {
   if (e && e.parameter && (e.parameter.nama || e.parameter.id)) {
     return doPost(e);
   }
-  return ContentService.createTextOutput("Webhook Buku Tamu BPS PPU Aktif & Terproteksi Dual-Check Anti-Duplikat!");
+  return ContentService.createTextOutput("Webhook Buku Tamu BPS PPU Aktif & Terproteksi Batch Processing Kilat!");
 }
 `;

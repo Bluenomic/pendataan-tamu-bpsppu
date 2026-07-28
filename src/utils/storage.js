@@ -216,42 +216,48 @@ export const importFromExcel = (file) => {
   });
 };
 
-// Sync Single Guest to Google Sheets Webhook (MULTIPLE FALLBACK PAYLOAD)
+// Sync Single Guest to Google Sheets Webhook
 export const syncGuestToGoogleSheets = async (webhookUrl, guest) => {
+  return syncBatchGuestsToGoogleSheets(webhookUrl, [guest]);
+};
+
+// INSTANT BATCH SYNC TO GOOGLE SHEETS (1 SINGLE HTTP REQUEST FOR ALL GUESTS!)
+export const syncBatchGuestsToGoogleSheets = async (webhookUrl, guestList) => {
   if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
+  if (!guestList || guestList.length === 0) return { success: true, count: 0 };
 
   const cleanUrl = webhookUrl.trim();
 
-  try {
-    const cleanPayload = {
-      id: guest.id || '-',
-      nama: guest.nama || '-',
-      noHp: guest.noHp || '-',
-      instansi: guest.instansi || '-',
-      nik: guest.nik || '-',
-      tujuan: guest.tujuan || '-',
-      keperluan: guest.keperluan || '-',
-      jumlah: String(guest.jumlah || 1),
-      tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
-      jamMasuk: guest.jamMasuk || '-',
-      jamKeluar: guest.jamKeluar || '-',
-      status: guest.status || 'Menunggu',
-      catatan: guest.catatan || '-'
-    };
+  // Prepare clean array payload
+  const cleanBatchPayload = guestList.map(guest => ({
+    id: guest.id || '-',
+    nama: guest.nama || '-',
+    noHp: guest.noHp || '-',
+    instansi: guest.instansi || '-',
+    nik: guest.nik || '-',
+    tujuan: guest.tujuan || '-',
+    keperluan: guest.keperluan || '-',
+    jumlah: String(guest.jumlah || 1),
+    tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
+    jamMasuk: guest.jamMasuk || '-',
+    jamKeluar: guest.jamKeluar || '-',
+    status: guest.status || 'Menunggu',
+    catatan: guest.catatan || '-'
+  }));
 
-    // Method 1: Send via POST text/plain payload (no-cors)
+  try {
     await fetch(cleanUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
-      body: JSON.stringify(cleanPayload)
+      body: JSON.stringify(cleanBatchPayload)
     });
 
-    return { success: true, message: 'Data dikirim ke Google Sheets' };
+    return { success: true, count: guestList.length, message: 'Batch sync kilat berhasil' };
   } catch (error) {
-    console.error('Google Sheets Sync Error:', error);
+    console.error('Batch Sync Error:', error);
     return { success: false, message: error.message };
   }
 };

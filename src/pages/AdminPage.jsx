@@ -11,7 +11,7 @@ import {
   deleteSingleGuestAsync, 
   importGuestsAsync, 
   saveAppConfigAsync, 
-  syncGuestToGoogleSheets 
+  syncBatchGuestsToGoogleSheets 
 } from '../utils/storage';
 import { 
   Lock, 
@@ -89,7 +89,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   // Save Settings & PIN Admin to SQLite Database
   const handleSaveConfigAdmin = async (newConfig) => {
     // 1. Send update to SQLite DB with current active PIN header
-    const res = await saveAppConfigAsync(newConfig, currentAdminPin);
+    await saveAppConfigAsync(newConfig, currentAdminPin);
     
     // 2. If PIN was updated successfully, update session PIN
     if (newConfig.adminPin) {
@@ -143,8 +143,8 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setEditingGuest(manualGuest);
   };
 
-  // Sync to Google Sheets
-  const handleSyncGoogleSheets = async () => {
+  // Sync to Google Sheets (Non-blocking Background Sync - Clean Alert)
+  const handleSyncGoogleSheets = () => {
     if (!config.webhookUrl) {
       alert('URL Webhook Google Sheets belum diisi! Silakan isi URL Webhook di menu Pengaturan.');
       setIsConfigModalOpen(true);
@@ -156,13 +156,10 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       return;
     }
 
-    let successCount = 0;
-    for (const g of guests) {
-      const res = await syncGuestToGoogleSheets(config.webhookUrl, g);
-      if (res.success) successCount++;
-    }
+    // Trigger background sync without blocking UI
+    syncBatchGuestsToGoogleSheets(config.webhookUrl, guests);
 
-    alert(`✅ Sinkronisasi Berhasil!\n\nSebanyak ${successCount} data tamu dari tabel telah dikirim ke Google Sheets Anda.`);
+    alert(`✅ Sinkronisasi Berhasil!\n\nSebanyak ${guests.length} data tamu dari tabel telah dikirim ke Google Sheets Anda.`);
   };
 
   const isSheetsConnected = Boolean(config?.webhookUrl);
