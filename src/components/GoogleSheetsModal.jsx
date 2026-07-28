@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   X, 
   Copy, 
@@ -12,20 +12,29 @@ import {
   Zap,
   CheckCircle2,
   AlertCircle,
-  Loader2
+  Loader2,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { GOOGLE_APPS_SCRIPT_CODE } from '../utils/googleScriptTemplate';
 
-export default function GoogleSheetsModal({ config, onSaveConfig, onClose }) {
+export default function GoogleSheetsModal({ config, currentAdminPin, onSaveConfig, onClose }) {
   const [webhookUrl, setWebhookUrl] = useState(config.webhookUrl || '');
   const [officeName, setOfficeName] = useState(config.officeName || 'Badan Pusat Statistik Kabupaten Penajam Paser Utara');
-  const [adminPin, setAdminPin] = useState(config.adminPin || '1234');
+  const [adminPin, setAdminPin] = useState(currentAdminPin || config.adminPin || '');
+  const [showPin, setShowPin] = useState(false); // Censor toggle state
   
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('settings');
   
   const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState(null); // { success: boolean, message: string }
+  const [testResult, setTestResult] = useState(null);
+
+  useEffect(() => {
+    if (currentAdminPin) {
+      setAdminPin(currentAdminPin);
+    }
+  }, [currentAdminPin]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(GOOGLE_APPS_SCRIPT_CODE);
@@ -91,7 +100,6 @@ export default function GoogleSheetsModal({ config, onSaveConfig, onClose }) {
       officeName: officeName.trim(),
       adminPin: adminPin.trim()
     });
-    alert('Pengaturan & Webhook Google Sheets berhasil disimpan!');
     onClose();
   };
 
@@ -172,21 +180,52 @@ export default function GoogleSheetsModal({ config, onSaveConfig, onClose }) {
               </a>
             </div>
             
-            {/* PIN Admin Setting */}
+            {/* PIN Admin Setting with Sensor & Eye Toggle */}
             <div className="form-group" style={{ background: 'rgba(2, 66, 130, 0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(2, 66, 130, 0.2)', marginBottom: '1rem' }}>
               <label className="form-label" style={{ color: 'var(--bps-navy)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <KeyRound size={15} /> PIN Akses Petugas / Admin
+                <KeyRound size={15} /> PIN Akses Petugas / Admin (Tersimpan di Database)
               </label>
-              <input 
-                type="text" 
-                className="form-input"
-                style={{ fontWeight: '800', letterSpacing: '0.1em' }}
-                value={adminPin}
-                onChange={(e) => setAdminPin(e.target.value)}
-                placeholder="Contoh: 1234"
-              />
+              
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPin ? 'text' : 'password'}
+                  className="form-input"
+                  style={{ 
+                    paddingRight: '2.5rem', 
+                    fontWeight: '800', 
+                    letterSpacing: showPin ? 'normal' : '0.25em',
+                    fontSize: '1rem'
+                  }}
+                  value={adminPin}
+                  onChange={(e) => setAdminPin(e.target.value)}
+                  placeholder="Masukkan PIN Admin"
+                  autoComplete="new-password"
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0.25rem'
+                  }}
+                  title={showPin ? 'Sembunyikan PIN (Sensor)' : 'Tampilkan PIN'}
+                >
+                  {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', margin: 0 }}>
-                PIN ini digunakan untuk mengunci & membuka portal pengelolaan admin (`/admin`).
+                PIN yang tersimpan di database `buku_tamu.db`. Klik ikon mata untuk melihat/menyensor PIN.
               </p>
             </div>
 
@@ -263,7 +302,7 @@ export default function GoogleSheetsModal({ config, onSaveConfig, onClose }) {
               </h4>
               <ol style={{ paddingLeft: '1.25rem', color: 'var(--text-secondary)' }}>
                 <li>Buka Google Sheets baru di <a href="https://sheets.new" target="_blank" rel="noreferrer" style={{ color: 'var(--bps-cyan)', textDecoration: 'underline', fontWeight: '700' }}>sheets.new <ExternalLink size={11} style={{ display: 'inline' }} /></a></li>
-                <li>Klik menu <b>Ekstensi</b> → <b>Apps Script</b>. Hapus semua isi default, lalu salin (*paste*) kode di bawah.</li>
+                <li>Klik menu <b>Ekstensi</b> → <b>Apps Script</b>. Hapus semua kode default, lalu salin (*paste*) kode di bawah.</li>
                 <li>Klik <b>Terapkan (Deploy)</b> → <b>Penetapan Baru (New Deployment)</b> → Pilih <b>Aplikasi Web (Web App)</b>. Setel <i>Akses: Siapa Saja (Anyone)</i>. Salin URL deployment ke tab <b>Pengaturan Webhook</b>!</li>
               </ol>
             </div>

@@ -43,7 +43,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [toast, setToast] = useState(null); // { message: string, type: 'success' | 'error' }
+  const [toast, setToast] = useState(null);
 
   // Check login on submit
   const handleAdminLogin = async (e) => {
@@ -97,7 +97,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     }
 
     onSaveConfig(newConfig);
-    setToast({ message: 'Pengaturan & Webhook berhasil disimpan!', type: 'success' });
+    setToast({ message: 'Pengaturan & PIN Admin berhasil disimpan ke database!', type: 'success' });
   };
 
   // Update Single Guest
@@ -145,7 +145,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setEditingGuest(manualGuest);
   };
 
-  // Sync to Google Sheets (Non-blocking background sync with sleek Toast Pop-up!)
+  // Sync to Google Sheets (Non-blocking Background Sync - Clean Toast)
   const handleSyncGoogleSheets = () => {
     if (!config.webhookUrl) {
       setToast({ message: 'URL Webhook Google Sheets belum diisi! Silakan atur di Pengaturan.', type: 'error' });
@@ -158,7 +158,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       return;
     }
 
-    // Trigger non-blocking background sync
+    // Trigger background sync without blocking UI
     syncBatchGuestsToGoogleSheets(config.webhookUrl, guests);
 
     // Show sleek pop-up notification
@@ -407,6 +407,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       {isConfigModalOpen && (
         <GoogleSheetsModal 
           config={config}
+          currentAdminPin={currentAdminPin}
           onSaveConfig={handleSaveConfigAdmin}
           onClose={() => setIsConfigModalOpen(false)}
         />
