@@ -200,7 +200,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
             </div>
           )}
 
-          <form onSubmit={handleAdminLogin}>
+          <form onSubmit={handleAdminLogin} autoComplete="off">
             <div className="form-group" style={{ marginBottom: '1.25rem' }}>
               <label className="form-label" style={{ textAlign: 'left' }}>Masukkan PIN Admin</label>
               <div style={{ position: 'relative' }}>
@@ -208,11 +208,12 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
                 <input 
                   type="password" 
                   className="form-input"
-                  style={{ paddingLeft: '2.5rem', textAlign: 'center', fontSize: '1.25rem', letterSpacing: '0.3em', fontWeight: '800' }}
-                  placeholder="••••"
+                  style={{ paddingLeft: '2.5rem', textAlign: 'center', fontSize: '1rem', fontWeight: '600' }}
+                  placeholder="Masukkan PIN Admin"
                   maxLength="12"
                   value={pinInput}
                   onChange={(e) => setPinInput(e.target.value)}
+                  autoComplete="new-password"
                   autoFocus
                 />
               </div>

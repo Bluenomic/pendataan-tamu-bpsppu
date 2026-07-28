@@ -70,21 +70,22 @@ export default function AdminPinModal({ onUnlock, onClose, targetTabName }) {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} autoComplete="off">
           <div className="form-group" style={{ marginBottom: '1.25rem' }}>
             <div style={{ position: 'relative' }}>
               <KeyRound size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="password" 
                 className="form-input"
-                style={{ paddingLeft: '2.5rem', textAlign: 'center', fontSize: '1.25rem', letterSpacing: '0.3em', fontWeight: '800' }}
-                placeholder="••••"
+                style={{ paddingLeft: '2.5rem', textAlign: 'center', fontSize: '1rem', fontWeight: '600' }}
+                placeholder="Masukkan PIN Admin"
                 maxLength="12"
                 value={pin}
                 onChange={(e) => {
                   setPin(e.target.value);
                   setErrorMsg('');
                 }}
+                autoComplete="new-password"
                 autoFocus
               />
             </div>
