@@ -216,19 +216,39 @@ export const importFromExcel = (file) => {
   });
 };
 
-// Sync Single Guest to Google Sheets Webhook
+// Sync Single Guest to Google Sheets Webhook (MULTIPLE FALLBACK PAYLOAD)
 export const syncGuestToGoogleSheets = async (webhookUrl, guest) => {
-  if (!webhookUrl) return { success: false, message: 'URL Webhook belum diisi' };
+  if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
+
+  const cleanUrl = webhookUrl.trim();
 
   try {
-    await fetch(webhookUrl, {
+    const cleanPayload = {
+      id: guest.id || '-',
+      nama: guest.nama || '-',
+      noHp: guest.noHp || '-',
+      instansi: guest.instansi || '-',
+      nik: guest.nik || '-',
+      tujuan: guest.tujuan || '-',
+      keperluan: guest.keperluan || '-',
+      jumlah: String(guest.jumlah || 1),
+      tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
+      jamMasuk: guest.jamMasuk || '-',
+      jamKeluar: guest.jamKeluar || '-',
+      status: guest.status || 'Menunggu',
+      catatan: guest.catatan || '-'
+    };
+
+    // Method 1: Send via POST text/plain payload (no-cors)
+    await fetch(cleanUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'text/plain;charset=utf-8',
       },
-      body: JSON.stringify(guest)
+      body: JSON.stringify(cleanPayload)
     });
+
     return { success: true, message: 'Data dikirim ke Google Sheets' };
   } catch (error) {
     console.error('Google Sheets Sync Error:', error);

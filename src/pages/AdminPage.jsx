@@ -146,15 +146,23 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   // Sync to Google Sheets
   const handleSyncGoogleSheets = async () => {
     if (!config.webhookUrl) {
+      alert('URL Webhook Google Sheets belum diisi! Silakan isi URL Webhook di menu Pengaturan.');
       setIsConfigModalOpen(true);
       return;
     }
+
+    if (guests.length === 0) {
+      alert('Tabel saat ini belum memiliki data tamu untuk disinkronkan. Tambahkan data tamu terlebih dahulu.');
+      return;
+    }
+
     let successCount = 0;
     for (const g of guests) {
       const res = await syncGuestToGoogleSheets(config.webhookUrl, g);
       if (res.success) successCount++;
     }
-    alert(`Proses sinkronisasi selesai. Data terkirim ke Google Sheets!`);
+
+    alert(`✅ Sinkronisasi Berhasil!\n\nSebanyak ${successCount} data tamu dari tabel telah dikirim ke Google Sheets Anda.`);
   };
 
   const isSheetsConnected = Boolean(config?.webhookUrl);
