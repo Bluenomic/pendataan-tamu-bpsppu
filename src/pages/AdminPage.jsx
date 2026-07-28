@@ -4,6 +4,7 @@ import AnalyticsView from '../components/AnalyticsView';
 import GoogleSheetsModal from '../components/GoogleSheetsModal';
 import GuestPassModal from '../components/GuestPassModal';
 import EditGuestModal from '../components/EditGuestModal';
+import ToastNotification from '../components/ToastNotification';
 import { 
   getGuestDataAsync, 
   saveSingleGuestAsync, 
@@ -38,10 +39,11 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const [activeTab, setActiveTab] = useState('table'); // 'table' | 'analytics'
   const [guests, setGuests] = useState([]);
   
-  // Modals
+  // Modals & Toast notification
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [toast, setToast] = useState(null); // { message: string, type: 'success' | 'error' }
 
   // Check login on submit
   const handleAdminLogin = async (e) => {
@@ -88,16 +90,14 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
 
   // Save Settings & PIN Admin to SQLite Database
   const handleSaveConfigAdmin = async (newConfig) => {
-    // 1. Send update to SQLite DB with current active PIN header
     await saveAppConfigAsync(newConfig, currentAdminPin);
     
-    // 2. If PIN was updated successfully, update session PIN
     if (newConfig.adminPin) {
       setCurrentAdminPin(newConfig.adminPin);
     }
 
-    // 3. Update parent config state
     onSaveConfig(newConfig);
+    setToast({ message: 'Pengaturan & Webhook berhasil disimpan!', type: 'success' });
   };
 
   // Update Single Guest
@@ -110,12 +110,14 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const handleDeleteGuest = async (id) => {
     setGuests(prev => prev.filter(g => g.id !== id));
     await deleteSingleGuestAsync(id, currentAdminPin);
+    setToast({ message: 'Data tamu berhasil dihapus.', type: 'success' });
   };
 
   // Import Guests from Excel
   const handleImportGuests = async (importedList) => {
     setGuests(prev => [...importedList, ...prev]);
     await importGuestsAsync(importedList, currentAdminPin);
+    setToast({ message: `Berhasil mengimpor ${importedList.length} data dari Excel!`, type: 'success' });
   };
 
   // Add Manual Guest
@@ -143,23 +145,27 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setEditingGuest(manualGuest);
   };
 
-  // Sync to Google Sheets (Non-blocking Background Sync - Clean Alert)
+  // Sync to Google Sheets (Non-blocking background sync with sleek Toast Pop-up!)
   const handleSyncGoogleSheets = () => {
     if (!config.webhookUrl) {
-      alert('URL Webhook Google Sheets belum diisi! Silakan isi URL Webhook di menu Pengaturan.');
+      setToast({ message: 'URL Webhook Google Sheets belum diisi! Silakan atur di Pengaturan.', type: 'error' });
       setIsConfigModalOpen(true);
       return;
     }
 
     if (guests.length === 0) {
-      alert('Tabel saat ini belum memiliki data tamu untuk disinkronkan. Tambahkan data tamu terlebih dahulu.');
+      setToast({ message: 'Tabel saat ini kosong, tidak ada data untuk disinkronkan.', type: 'error' });
       return;
     }
 
-    // Trigger background sync without blocking UI
+    // Trigger non-blocking background sync
     syncBatchGuestsToGoogleSheets(config.webhookUrl, guests);
 
-    alert(`✅ Sinkronisasi Berhasil!\n\nSebanyak ${guests.length} data tamu dari tabel telah dikirim ke Google Sheets Anda.`);
+    // Show sleek pop-up notification
+    setToast({ 
+      message: `Data tamu (${guests.length} baris) berhasil disinkronkan ke Google Sheets!`, 
+      type: 'success' 
+    });
   };
 
   const isSheetsConnected = Boolean(config?.webhookUrl);
@@ -240,6 +246,15 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bps-bg)' }}>
       
+      {/* Toast Notification Pop-up */}
+      {toast && (
+        <ToastNotification 
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Admin Top Header Bar */}
       <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
