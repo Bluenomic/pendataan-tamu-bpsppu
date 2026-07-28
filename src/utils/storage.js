@@ -3,72 +3,35 @@ import * as XLSX from 'xlsx';
 const STORAGE_KEY = 'bps_ppu_buku_tamu_data_v2';
 const CONFIG_KEY = 'bps_ppu_buku_tamu_config_v2';
 
-export const INITIAL_GUEST_DATA = [
-  {
-    id: 'BPS-PPU-2026-001',
-    nama: 'Dr. Hendra Wijaya, M.Si',
-    noHp: '081234567890',
-    instansi: 'Bappeda Kabupaten Penajam Paser Utara',
-    nik: '6409012304850001',
-    tujuan: 'Kepala BPS Kab. Penajam Paser Utara',
-    keperluan: 'Koordinasi Data PDRB & Publikasi Penajam Paser Utara Dalam Angka 2026',
-    jumlah: 2,
-    tanggal: new Date(Date.now() - 3600000 * 24 * 2).toISOString().split('T')[0],
-    jamMasuk: '08:30 WITA',
-    jamKeluar: '10:15 WITA',
-    status: 'Selesai',
-    catatan: 'Dokumen rekomendasi statistik telah diserahkan.',
-    ttd: ''
-  },
-  {
-    id: 'BPS-PPU-2026-002',
-    nama: 'Siti Rahmawati, S.Stat',
-    noHp: '085712345678',
-    instansi: 'Dinas Kominfo Penajam Paser Utara',
-    nik: '6409025509980003',
-    tujuan: 'Tim Pelayanan Statistik Terpadu (PST)',
-    keperluan: 'Konsultasi Data Inflasi & Survei Kepuasan Konsumen',
-    jumlah: 1,
-    tanggal: new Date(Date.now() - 3600000 * 24).toISOString().split('T')[0],
-    jamMasuk: '09:15 WITA',
-    jamKeluar: '11:00 WITA',
-    status: 'Selesai',
-    catatan: 'Permohonan rilis pers BRS',
-    ttd: ''
-  },
-  {
-    id: 'BPS-PPU-2026-003',
-    nama: 'Ahmad Fauzi',
-    noHp: '081398765432',
-    instansi: 'Universitas Mulawarman',
-    nik: '6409051211790005',
-    tujuan: 'Subbagian Umum & Kepegawaian',
-    keperluan: 'Pengajuan Izin Riset & Permohonan Mikrodata Pertanian ST2023',
-    jumlah: 3,
-    tanggal: new Date().toISOString().split('T')[0],
-    jamMasuk: '09:00 WITA',
-    jamKeluar: '-',
-    status: 'Sedang Bertemu',
-    catatan: 'Ruang PST Lt. 1',
-    ttd: ''
-  },
-  {
-    id: 'BPS-PPU-2026-004',
-    nama: 'Dewi Lestari, S.I.Kom',
-    noHp: '082133445566',
-    instansi: 'Penajam Post Media',
-    nik: '6409036004920002',
-    tujuan: 'Humas / Subbag Umum',
-    keperluan: 'Wawancara Press Berita Resmi Statistik (BRS)',
-    jumlah: 1,
-    tanggal: new Date().toISOString().split('T')[0],
-    jamMasuk: '10:30 WITA',
-    jamKeluar: '-',
-    status: 'Menunggu',
-    catatan: 'Liputan Rilis Inflasi PPU',
-    ttd: ''
+export const INITIAL_GUEST_DATA = [];
+
+// Fetch All Guests (Tries SQLite Backend first, falls back to localStorage)
+export const getGuestDataAsync = async () => {
+  try {
+    const response = await fetch('/api/guests');
+    if (response.ok) {
+      const resData = await response.json();
+      if (resData.success && resData.data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(resData.data));
+        return resData.data;
+      }
+    }
+  } catch (e) {
+    console.warn('[SQLite Backend] Backend server not reachable, using localStorage fallback');
   }
-];
+
+  // Fallback to localStorage
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_GUEST_DATA));
+      return INITIAL_GUEST_DATA;
+    }
+    return JSON.parse(data);
+  } catch (e) {
+    return INITIAL_GUEST_DATA;
+  }
+};
 
 export const getGuestData = () => {
   try {
@@ -79,8 +42,57 @@ export const getGuestData = () => {
     }
     return JSON.parse(data);
   } catch (e) {
-    console.error('Failed to read guest data:', e);
     return INITIAL_GUEST_DATA;
+  }
+};
+
+// Add Single Guest to SQLite Database & LocalStorage
+export const saveSingleGuestAsync = async (guest) => {
+  try {
+    await fetch('/api/guests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(guest)
+    });
+  } catch (e) {
+    console.error('[SQLite Backend] Failed to save guest to SQLite:', e);
+  }
+};
+
+// Update Single Guest in SQLite Database
+export const updateSingleGuestAsync = async (guest) => {
+  try {
+    await fetch(`/api/guests/${encodeURIComponent(guest.id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(guest)
+    });
+  } catch (e) {
+    console.error('[SQLite Backend] Failed to update guest in SQLite:', e);
+  }
+};
+
+// Delete Single Guest in SQLite Database
+export const deleteSingleGuestAsync = async (id) => {
+  try {
+    await fetch(`/api/guests/${encodeURIComponent(id)}`, {
+      method: 'DELETE'
+    });
+  } catch (e) {
+    console.error('[SQLite Backend] Failed to delete guest from SQLite:', e);
+  }
+};
+
+// Import Array of Guests to SQLite Database
+export const importGuestsAsync = async (guestList) => {
+  try {
+    await fetch('/api/guests/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(guestList)
+    });
+  } catch (e) {
+    console.error('[SQLite Backend] Failed to import guests to SQLite:', e);
   }
 };
 
@@ -88,8 +100,25 @@ export const saveGuestData = (guests) => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
   } catch (e) {
-    console.error('Failed to save guest data:', e);
+    console.error('Failed to save guest data locally:', e);
   }
+};
+
+// Config Async Operations
+export const getAppConfigAsync = async () => {
+  try {
+    const response = await fetch('/api/config');
+    if (response.ok) {
+      const resData = await response.json();
+      if (resData.success && resData.data) {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(resData.data));
+        return resData.data;
+      }
+    }
+  } catch (e) {
+    console.warn('[SQLite Backend] Config endpoint fallback to localStorage');
+  }
+  return getAppConfig();
 };
 
 export const getAppConfig = () => {
@@ -111,6 +140,19 @@ export const getAppConfig = () => {
       address: 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411'
     };
   }
+};
+
+export const saveAppConfigAsync = async (config) => {
+  try {
+    await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config)
+    });
+  } catch (e) {
+    console.error('Failed to save config in SQLite:', e);
+  }
+  saveAppConfig(config);
 };
 
 export const saveAppConfig = (config) => {

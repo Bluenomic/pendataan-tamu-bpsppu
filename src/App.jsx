@@ -7,28 +7,47 @@ import GoogleSheetsModal from './components/GoogleSheetsModal';
 import GuestPassModal from './components/GuestPassModal';
 import EditGuestModal from './components/EditGuestModal';
 import { 
-  getGuestData, 
+  getGuestDataAsync, 
   saveGuestData, 
-  getAppConfig, 
-  saveAppConfig, 
+  saveSingleGuestAsync,
+  updateSingleGuestAsync,
+  deleteSingleGuestAsync,
+  importGuestsAsync,
+  getAppConfigAsync, 
+  saveAppConfigAsync, 
   syncGuestToGoogleSheets 
 } from './utils/storage';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('form');
-  const [theme, setTheme] = useState('light'); // Set light-theme as default
+  const [theme, setTheme] = useState('light');
   const [guests, setGuests] = useState([]);
-  const [config, setConfig] = useState(getAppConfig());
+  const [config, setConfig] = useState({
+    officeName: 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
+    subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
+    address: 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411',
+    webhookUrl: '',
+    autoSync: true
+  });
   
   // Modals state
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
 
-  // Initialize Data & Theme
+  // Initialize Data & Theme from SQLite Database (with fallback)
   useEffect(() => {
-    const loadedData = getGuestData();
-    setGuests(loadedData);
+    const initData = async () => {
+      const loadedGuests = await getGuestDataAsync();
+      setGuests(loadedGuests);
+
+      const loadedConfig = await getAppConfigAsync();
+      setConfig(loadedConfig);
+    };
+    initData();
+  }, []);
+
+  useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
@@ -37,11 +56,14 @@ export default function App() {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  // Add New Guest Handler
+  // Add New Guest Handler (Persists to SQLite Database)
   const handleAddGuest = async (newGuest) => {
     const updatedGuests = [newGuest, ...guests];
     setGuests(updatedGuests);
-    saveGuestData(updatedGuests);
+    saveGuestData(updatedGuests); // Cache locally
+
+    // Async save to SQLite Database
+    await saveSingleGuestAsync(newGuest);
 
     // Auto Sync to Google Sheets Webhook if configured
     if (config.webhookUrl) {
@@ -73,30 +95,39 @@ export default function App() {
   };
 
   // Update Single Guest Entry
-  const handleUpdateGuest = (updatedGuest) => {
+  const handleUpdateGuest = async (updatedGuest) => {
     const updatedGuests = guests.map(g => g.id === updatedGuest.id ? updatedGuest : g);
     setGuests(updatedGuests);
     saveGuestData(updatedGuests);
+
+    // Persist update to SQLite Database
+    await updateSingleGuestAsync(updatedGuest);
   };
 
   // Delete Guest Entry
-  const handleDeleteGuest = (id) => {
+  const handleDeleteGuest = async (id) => {
     const updatedGuests = guests.filter(g => g.id !== id);
     setGuests(updatedGuests);
     saveGuestData(updatedGuests);
+
+    // Persist delete to SQLite Database
+    await deleteSingleGuestAsync(id);
   };
 
   // Import Guests array from Excel
-  const handleImportGuests = (importedList) => {
+  const handleImportGuests = async (importedList) => {
     const combined = [...importedList, ...guests];
     setGuests(combined);
     saveGuestData(combined);
+
+    // Persist batch import to SQLite Database
+    await importGuestsAsync(importedList);
   };
 
   // Save Config
-  const handleSaveConfig = (newConfig) => {
+  const handleSaveConfig = async (newConfig) => {
     setConfig(newConfig);
-    saveAppConfig(newConfig);
+    await saveAppConfigAsync(newConfig);
   };
 
   // Sync All Guests to Google Sheets
@@ -168,7 +199,7 @@ export default function App() {
           © 2026 <b>BPS Buku Tamu Digital</b> • Badan Pusat Statistik Kabupaten Penajam Paser Utara
         </div>
         <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', opacity: 0.8 }}>
-          Terintegrasi Excel Spreadsheet Export (.xlsx) & Google Sheets Webhook Sync
+          Database SQLite (`buku_tamu.db`) • Terintegrasi Excel Export (.xlsx) & Google Sheets Webhook Sync
         </div>
       </footer>
 
