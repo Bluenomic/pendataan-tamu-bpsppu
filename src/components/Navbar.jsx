@@ -23,7 +23,6 @@ export default function Navbar({
   toggleTheme, 
   config, 
   openConfigModal,
-  totalCount,
   isAdminUnlocked,
   onLockAdmin 
 }) {
@@ -52,8 +51,6 @@ export default function Navbar({
           
           {/* Official BPS Logo & Name */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            
-            {/* Official BPS Logo PNG */}
             <img 
               src="/logo-bps.png" 
               alt="Logo BPS" 
@@ -102,18 +99,6 @@ export default function Navbar({
               <FileSpreadsheet size={16} />
               Tabel Spreadsheet
               {!isAdminUnlocked && <Lock size={12} color="#fbbf24" style={{ marginLeft: '2px' }} />}
-              {totalCount > 0 && (
-                <span style={{ 
-                  background: '#0099db',
-                  color: '#fff',
-                  fontSize: '0.7rem',
-                  padding: '0.1rem 0.45rem',
-                  borderRadius: '10px',
-                  marginLeft: '0.2rem'
-                }}>
-                  {totalCount}
-                </span>
-              )}
             </button>
 
             <button 

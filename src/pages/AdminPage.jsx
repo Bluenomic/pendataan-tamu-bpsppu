@@ -285,11 +285,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
             >
               <FileSpreadsheet size={16} />
               Tabel Spreadsheet Data
-              {guests.length > 0 && (
-                <span style={{ background: '#0099db', color: '#fff', fontSize: '0.7rem', padding: '0.1rem 0.45rem', borderRadius: '10px', marginLeft: '0.2rem' }}>
-                  {guests.length}
-                </span>
-              )}
             </button>
 
             <button 
