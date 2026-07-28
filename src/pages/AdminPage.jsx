@@ -367,6 +367,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         {activeTab === 'table' && (
           <SpreadsheetTable 
             guests={guests}
+            config={config}
             onUpdateGuest={handleUpdateGuest}
             onDeleteGuest={handleDeleteGuest}
             onImportGuests={handleImportGuests}

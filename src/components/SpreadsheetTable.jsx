@@ -13,12 +13,15 @@ import {
   Plus,
   FileSpreadsheet,
   CheckSquare,
-  Square
+  Square,
+  FileText
 } from 'lucide-react';
 import { exportToExcel, importFromExcel } from '../utils/storage';
+import ReportModal from './ReportModal';
 
 export default function SpreadsheetTable({ 
   guests, 
+  config,
   onUpdateGuest, 
   onDeleteGuest, 
   onImportGuests, 
@@ -32,6 +35,7 @@ export default function SpreadsheetTable({
   const [filterDate, setFilterDate] = useState('ALL');
   const [selectedIds, setSelectedIds] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   // Filtered Guests Computation
   const filteredGuests = useMemo(() => {
@@ -163,7 +167,7 @@ export default function SpreadsheetTable({
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             
             {/* Search Input */}
-            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', flex: '1 1 300px' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '380px', flex: '1 1 280px' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text"
@@ -178,6 +182,16 @@ export default function SpreadsheetTable({
             {/* Main Action Buttons Grid/Flex */}
             <div className="admin-action-buttons-grid">
               
+              {/* Cetak Laporan PDF Official Button */}
+              <button 
+                className="btn btn-primary btn-sm btn-action-touch"
+                onClick={() => setIsReportOpen(true)}
+                title="Buka & Cetak Laporan Rekapitulasi Resmi BPS PPU"
+              >
+                <FileText size={15} />
+                <span>Cetak Laporan PDF</span>
+              </button>
+
               {/* Export Excel Button */}
               <button 
                 className="btn btn-success btn-sm btn-action-touch"
@@ -208,7 +222,7 @@ export default function SpreadsheetTable({
 
               {/* Add Manual Guest */}
               <button 
-                className="btn btn-primary btn-sm btn-action-touch"
+                className="btn btn-secondary btn-sm btn-action-touch"
                 onClick={onAddNewManual}
               >
                 <Plus size={15} />
@@ -261,7 +275,7 @@ export default function SpreadsheetTable({
 
             {/* Batch Selection Operations */}
             {selectedIds.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(2, 66, 130, 0.1)', padding: '0.35rem 0.65rem', borderRadius: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(2, 66, 130, 0.1)', padding: '0.35rem 0.65rem', borderRadius: '0px', border: '1px solid var(--bps-navy)', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--bps-navy)' }}>
                   {selectedIds.length} Terpilih:
                 </span>
@@ -287,10 +301,10 @@ export default function SpreadsheetTable({
               <th style={{ width: '36px', textAlign: 'center' }}>
                 <button 
                   onClick={toggleSelectAll} 
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}
                 >
                   {selectedIds.length > 0 && selectedIds.length === filteredGuests.length ? (
-                    <CheckSquare size={16} color="var(--bps-navy)" />
+                    <CheckSquare size={16} color="#ffffff" />
                   ) : (
                     <Square size={16} />
                   )}
@@ -320,7 +334,7 @@ export default function SpreadsheetTable({
               filteredGuests.map((g, idx) => {
                 const isSelected = selectedIds.includes(g.id);
                 return (
-                  <tr key={g.id} style={{ background: isSelected ? 'rgba(2, 66, 130, 0.08)' : undefined }}>
+                  <tr key={g.id} style={{ background: isSelected ? 'rgba(2, 66, 130, 0.12)' : undefined }}>
                     
                     {/* Checkbox */}
                     <td style={{ textAlign: 'center' }}>
@@ -426,6 +440,16 @@ export default function SpreadsheetTable({
           </tbody>
         </table>
       </div>
+
+      {/* Official Report Modal Dialog */}
+      {isReportOpen && (
+        <ReportModal 
+          guests={guests}
+          config={config}
+          onClose={() => setIsReportOpen(false)}
+        />
+      )}
+
     </div>
   );
 }
