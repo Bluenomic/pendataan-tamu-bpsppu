@@ -176,15 +176,15 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   if (!isAdminUnlocked) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bps-bg)', padding: '1rem' }}>
-        <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '2rem', textAlign: 'center', background: 'var(--bps-card)' }}>
+        <div className="glass-panel" style={{ width: '100%', maxWidth: '440px', padding: '1.75rem', textAlign: 'center', background: 'var(--bps-card)' }}>
           
           <a href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', color: 'var(--bps-navy)', textDecoration: 'none', fontSize: '0.8rem', fontWeight: '700', marginBottom: '1.25rem' }}>
             <ArrowLeft size={14} /> Kembali ke Mode Kios Tamu
           </a>
 
           <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-            <img src="/logo-bps.png" alt="Logo BPS" style={{ height: '48px', objectFit: 'contain', margin: '0 auto 0.75rem' }} />
-            <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--bps-navy)' }}>
+            <img src="/logo-bps.png" alt="Logo BPS" style={{ height: '44px', objectFit: 'contain', margin: '0 auto 0.75rem' }} />
+            <h2 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--bps-navy)' }}>
               Portal Pengelolaan Admin PST
             </h2>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>
@@ -230,7 +230,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.8rem' }}>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.8rem', minHeight: '44px' }}>
               <Lock size={16} /> Masuk ke Dashboard Admin
             </button>
           </form>
@@ -241,7 +241,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   }
 
   /* --------------------------------------------------------------------------
-     B. ADMIN DASHBOARD PORTAL (Once Authenticated)
+     B. ADMIN DASHBOARD PORTAL (Once Authenticated - Fully Responsive)
      -------------------------------------------------------------------------- */
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bps-bg)' }}>
@@ -255,113 +255,107 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         />
       )}
 
-      {/* Admin Top Header Bar */}
-      <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      {/* Admin Top Header Bar - Responsive Container */}
+      <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           
-          {/* Admin Logo & Title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-            <img src="/logo-bps.png" alt="Logo BPS" style={{ height: '38px', objectFit: 'contain' }} />
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h1 style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
-                  PORTAL ADM BPS PPU
-                </h1>
-                <span style={{ background: '#16a34a', color: '#fff', fontSize: '0.7rem', padding: '0.1rem 0.5rem', borderRadius: '10px', fontWeight: '800' }}>
-                  ADMIN ONLINE
-                </span>
-              </div>
-              <p style={{ fontSize: '0.8rem', color: '#38bdf8', margin: 0, fontWeight: '600' }}>
-                Pengelolaan Buku Tamu & Rekapitulasi Data
-              </p>
-            </div>
-          </div>
-
-          {/* Admin Management Tabs */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button 
-              className={`bps-tab-btn ${activeTab === 'table' ? 'active' : ''}`}
-              onClick={() => setActiveTab('table')}
-            >
-              <FileSpreadsheet size={16} />
-              Tabel Spreadsheet Data
-            </button>
-
-            <button 
-              className={`bps-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-              onClick={() => setActiveTab('analytics')}
-            >
-              <BarChart3 size={16} />
-              Analitik & Grafik
-            </button>
-          </nav>
-
-          {/* Right Action Icons & Logout */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <div className="admin-header-responsive">
             
-            {/* Google Sheets Sync Badge */}
-            <button 
-              onClick={() => setIsConfigModalOpen(true)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                color: '#ffffff',
-                padding: '0.4rem 0.85rem',
-                borderRadius: '6px',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem'
-              }}
-            >
-              <Share2 size={14} color={isSheetsConnected ? '#4ade80' : '#fbbf24'} />
-              <span>Google Sheets: </span>
-              {isSheetsConnected ? (
-                <span style={{ color: '#4ade80', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                  <CheckCircle2 size={13} /> Aktif
-                </span>
-              ) : (
-                <span style={{ color: '#fbbf24', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                  <AlertCircle size={13} /> Sinkron
-                </span>
-              )}
-            </button>
+            {/* Logo & Title Section */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <img src="/logo-bps.png" alt="Logo BPS" style={{ height: '34px', objectFit: 'contain' }} />
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  <h1 style={{ fontSize: '1rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
+                    PORTAL ADM BPS PPU
+                  </h1>
+                  <span style={{ background: '#16a34a', color: '#fff', fontSize: '0.65rem', padding: '0.1rem 0.4rem', borderRadius: '10px', fontWeight: '800' }}>
+                    ONLINE
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#38bdf8', margin: 0, fontWeight: '600' }}>
+                  Pengelolaan Buku Tamu PST
+                </p>
+              </div>
+            </div>
 
-            {/* Settings */}
-            <button 
-              onClick={() => setIsConfigModalOpen(true)}
-              style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', padding: '0.45rem', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              title="Pengaturan Aplikasi & PIN Admin"
-            >
-              <Settings size={17} />
-            </button>
+            {/* Navigation Tabs */}
+            <nav className="admin-nav-tabs">
+              <button 
+                className={`bps-tab-btn ${activeTab === 'table' ? 'active' : ''}`}
+                onClick={() => setActiveTab('table')}
+              >
+                <FileSpreadsheet size={16} />
+                <span>Tabel Data</span>
+              </button>
 
-            {/* Theme Toggle */}
-            <button 
-              onClick={toggleTheme}
-              style={{ background: 'rgba(255, 255, 255, 0.1)', border: '1px solid rgba(255, 255, 255, 0.2)', color: '#ffffff', padding: '0.45rem', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-            >
-              {theme === 'dark' ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#38bdf8" />}
-            </button>
+              <button 
+                className={`bps-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => setActiveTab('analytics')}
+              >
+                <BarChart3 size={16} />
+                <span>Analitik</span>
+              </button>
+            </nav>
 
-            {/* Switch to Kiosk View */}
-            <a 
-              href="/" 
-              className="btn btn-secondary btn-sm"
-              style={{ background: '#ffffff', color: '#024282', fontWeight: '800' }}
-            >
-              <ArrowLeft size={14} /> Kios Tamu
-            </a>
+            {/* Right Action Icons & Controls */}
+            <div className="admin-controls-flex">
+              
+              {/* Google Sheets Status */}
+              <button 
+                onClick={() => setIsConfigModalOpen(true)}
+                className="btn-admin-header-action"
+                title="Pengaturan Google Sheets Sync"
+              >
+                <Share2 size={14} color={isSheetsConnected ? '#4ade80' : '#fbbf24'} />
+                <span className="hide-on-mobile">Sheets: </span>
+                {isSheetsConnected ? (
+                  <span style={{ color: '#4ade80', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <CheckCircle2 size={13} /> Aktif
+                  </span>
+                ) : (
+                  <span style={{ color: '#fbbf24', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <AlertCircle size={13} /> Off
+                  </span>
+                )}
+              </button>
 
-            {/* Logout Admin Button */}
-            <button 
-              onClick={handleLogout}
-              className="btn btn-danger btn-sm"
-            >
-              <LogOut size={14} /> Lock Admin
-            </button>
+              {/* Settings */}
+              <button 
+                onClick={() => setIsConfigModalOpen(true)}
+                className="btn-admin-icon"
+                title="Pengaturan Aplikasi & PIN Admin"
+              >
+                <Settings size={17} />
+              </button>
+
+              {/* Theme Toggle */}
+              <button 
+                onClick={toggleTheme}
+                className="btn-admin-icon"
+                title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+              >
+                {theme === 'dark' ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#38bdf8" />}
+              </button>
+
+              {/* Switch to Kiosk View */}
+              <a 
+                href="/" 
+                className="btn btn-secondary btn-sm btn-kiosk-responsive"
+                style={{ background: '#ffffff', color: '#024282', fontWeight: '800' }}
+              >
+                <ArrowLeft size={14} /> Kios
+              </a>
+
+              {/* Logout Admin Button */}
+              <button 
+                onClick={handleLogout}
+                className="btn btn-danger btn-sm"
+              >
+                <LogOut size={14} /> Lock
+              </button>
+
+            </div>
 
           </div>
 
@@ -369,7 +363,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       </header>
 
       {/* Main Admin Content */}
-      <main style={{ flex: 1, paddingTop: '1.25rem' }}>
+      <main style={{ flex: 1, paddingTop: '1rem', paddingBottom: '2rem' }}>
         {activeTab === 'table' && (
           <SpreadsheetTable 
             guests={guests}
@@ -389,12 +383,9 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       </main>
 
       {/* Footer */}
-      <footer style={{ textAlign: 'center', padding: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', borderTop: '1px solid var(--bps-card-border)', background: 'var(--bps-card)', marginTop: '2rem' }}>
+      <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--bps-card-border)', background: 'var(--bps-card)' }}>
         <div>
           © 2026 <b>BPS Buku Tamu Digital</b> • Portal Admin BPS Kabupaten Penajam Paser Utara
-        </div>
-        <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', opacity: 0.8 }}>
-          Database Terproteksi SQLite (`/api/admin/*`)
         </div>
       </footer>
 

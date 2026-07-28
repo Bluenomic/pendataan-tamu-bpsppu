@@ -140,7 +140,6 @@ export default function SpreadsheetTable({
     try {
       const imported = await importFromExcel(file);
       onImportGuests(imported);
-      alert(`Berhasil mengimpor ${imported.length} data tamu dari Excel!`);
     } catch (err) {
       alert('Gagal mengimpor file Excel: ' + err.message);
     }
@@ -150,70 +149,70 @@ export default function SpreadsheetTable({
   const handleSync = async () => {
     setIsSyncing(true);
     await onSyncGoogleSheets();
-    setTimeout(() => setIsSyncing(false), 800);
+    setTimeout(() => setIsSyncing(false), 500);
   };
 
   return (
-    <div style={{ padding: '0 1rem 2rem 1rem', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ padding: '0 0.75rem 2rem 0.75rem', maxWidth: '1400px', margin: '0 auto' }}>
       
-      {/* Top Toolbar Panel */}
-      <div className="glass-panel" style={{ padding: '1.25rem', marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Top Toolbar Panel - Responsive */}
+      <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           
           {/* Row 1: Search & Action Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             
             {/* Search Input */}
-            <div style={{ position: 'relative', minWidth: '300px', flex: 1 }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '400px', flex: '1 1 300px' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
                 type="text"
                 className="form-input"
-                style={{ paddingLeft: '2.5rem' }}
-                placeholder="Cari Nama, Instansi, Keperluan, atau ID Tamu..."
+                style={{ paddingLeft: '2.5rem', width: '100%' }}
+                placeholder="Cari Nama, Instansi, Keperluan, atau ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
-            {/* Main Action Buttons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {/* Main Action Buttons Grid/Flex */}
+            <div className="admin-action-buttons-grid">
               
               {/* Export Excel Button */}
               <button 
-                className="btn btn-success btn-sm"
+                className="btn btn-success btn-sm btn-action-touch"
                 onClick={() => exportToExcel(filteredGuests)}
                 title="Unduh data dalam format file Excel (.xlsx)"
               >
-                <Download size={16} />
-                Ekspor Excel (.xlsx)
+                <Download size={15} />
+                <span>Ekspor Excel</span>
               </button>
 
               {/* Import Excel */}
-              <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                <Upload size={16} />
-                Impor Excel
+              <label className="btn btn-secondary btn-sm btn-action-touch" style={{ cursor: 'pointer' }}>
+                <Upload size={15} />
+                <span>Impor Excel</span>
                 <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} style={{ display: 'none' }} />
               </label>
 
               {/* Google Sheets Sync Button */}
               <button 
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm btn-action-touch"
                 onClick={handleSync}
                 disabled={isSyncing}
-                title="Kirim ulang data ke Google Sheets Webhook"
+                title="Kirim data ke Google Sheets Webhook"
               >
-                <RefreshCw size={16} className={isSyncing ? 'spin' : ''} />
-                Sync Google Sheets
+                <RefreshCw size={15} className={isSyncing ? 'spin' : ''} />
+                <span>Sync Sheets</span>
               </button>
 
               {/* Add Manual Guest */}
               <button 
-                className="btn btn-primary btn-sm"
+                className="btn btn-primary btn-sm btn-action-touch"
                 onClick={onAddNewManual}
               >
-                <Plus size={16} />
-                Tambah Manual
+                <Plus size={15} />
+                <span>Tambah Manual</span>
               </button>
 
             </div>
@@ -221,18 +220,18 @@ export default function SpreadsheetTable({
           </div>
 
           {/* Row 2: Filters & Batch Operations */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid var(--bg-card-border)', paddingTop: '0.85rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', borderTop: '1px solid var(--bps-card-border)', paddingTop: '0.75rem' }}>
             
             {/* Filter Dropdowns */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <Filter size={14} /> Filter Data:
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', width: '100%', maxWidth: '600px' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Filter size={14} /> Filter:
               </span>
 
               {/* Status Filter */}
               <select 
                 className="form-select"
-                style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                style={{ width: 'auto', flex: 1, minWidth: '130px', padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -245,7 +244,7 @@ export default function SpreadsheetTable({
               {/* Date Filter */}
               <select 
                 className="form-select"
-                style={{ width: 'auto', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                style={{ width: 'auto', flex: 1, minWidth: '130px', padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
               >
@@ -255,21 +254,21 @@ export default function SpreadsheetTable({
                 <option value="MONTH">Bulan Ini</option>
               </select>
 
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Menampilkan <b>{filteredGuests.length}</b> dari {guests.length} kunjungan
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                <b>{filteredGuests.length}</b> / {guests.length} data
               </span>
             </div>
 
             {/* Batch Selection Operations */}
             {selectedIds.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(99, 102, 241, 0.15)', padding: '0.35rem 0.75rem', borderRadius: '8px' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--accent-primary)' }}>
-                  {selectedIds.length} Baris Terpilih:
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(2, 66, 130, 0.1)', padding: '0.35rem 0.65rem', borderRadius: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--bps-navy)' }}>
+                  {selectedIds.length} Terpilih:
                 </span>
-                <button className="btn btn-success btn-sm" onClick={handleBatchMarkDone} style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>
-                  <CheckCircle size={13} /> Tandai Selesai
+                <button className="btn btn-success btn-sm" onClick={handleBatchMarkDone} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                  <CheckCircle size={13} /> Selesai
                 </button>
-                <button className="btn btn-danger btn-sm" onClick={handleBatchDelete} style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem' }}>
+                <button className="btn btn-danger btn-sm" onClick={handleBatchDelete} style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
                   <Trash2 size={13} /> Hapus
                 </button>
               </div>
@@ -280,33 +279,33 @@ export default function SpreadsheetTable({
         </div>
       </div>
 
-      {/* Spreadsheet Grid Table */}
-      <div className="table-container glass-panel">
-        <table className="spreadsheet-table">
+      {/* Spreadsheet Grid Table (Smooth Touch Scroll Wrapper) */}
+      <div className="table-container glass-panel" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <table className="spreadsheet-table" style={{ minWidth: '950px' }}>
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '36px', textAlign: 'center' }}>
                 <button 
                   onClick={toggleSelectAll} 
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
                 >
                   {selectedIds.length > 0 && selectedIds.length === filteredGuests.length ? (
-                    <CheckSquare size={16} color="var(--accent-primary)" />
+                    <CheckSquare size={16} color="var(--bps-navy)" />
                   ) : (
                     <Square size={16} />
                   )}
                 </button>
               </th>
-              <th>No</th>
-              <th>Tanggal & Jam</th>
-              <th>ID Tamu</th>
-              <th>Nama Tamu</th>
-              <th>Instansi / Alamat</th>
-              <th>Tujuan Unit</th>
+              <th style={{ width: '36px' }}>No</th>
+              <th style={{ width: '130px' }}>Tanggal & Waktu</th>
+              <th style={{ width: '150px' }}>ID Tamu</th>
+              <th style={{ width: '160px' }}>Nama Tamu</th>
+              <th style={{ width: '160px' }}>Instansi / Alamat</th>
+              <th style={{ width: '150px' }}>Tujuan Unit</th>
               <th>Keperluan</th>
-              <th>Rombongan</th>
-              <th style={{ textAlign: 'center' }}>Status Kunjungan</th>
-              <th style={{ textAlign: 'center', width: '130px' }}>Aksi</th>
+              <th style={{ width: '90px', textAlign: 'center' }}>Jumlah</th>
+              <th style={{ textAlign: 'center', width: '130px' }}>Status</th>
+              <th style={{ textAlign: 'center', width: '110px' }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
@@ -321,7 +320,7 @@ export default function SpreadsheetTable({
               filteredGuests.map((g, idx) => {
                 const isSelected = selectedIds.includes(g.id);
                 return (
-                  <tr key={g.id} style={{ background: isSelected ? 'rgba(99, 102, 241, 0.08)' : undefined }}>
+                  <tr key={g.id} style={{ background: isSelected ? 'rgba(2, 66, 130, 0.08)' : undefined }}>
                     
                     {/* Checkbox */}
                     <td style={{ textAlign: 'center' }}>
@@ -329,7 +328,7 @@ export default function SpreadsheetTable({
                         onClick={() => toggleSelectOne(g.id)} 
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
                       >
-                        {isSelected ? <CheckSquare size={16} color="var(--accent-primary)" /> : <Square size={16} />}
+                        {isSelected ? <CheckSquare size={16} color="var(--bps-navy)" /> : <Square size={16} />}
                       </button>
                     </td>
 
@@ -338,50 +337,50 @@ export default function SpreadsheetTable({
 
                     {/* Tanggal & Waktu */}
                     <td>
-                      <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{g.tanggal}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                      <div style={{ fontWeight: '700', fontSize: '0.8rem' }}>{g.tanggal}</div>
+                      <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                         <Clock size={11} /> {g.jamMasuk} {g.jamKeluar !== '-' ? `- ${g.jamKeluar}` : ''}
                       </div>
                     </td>
 
                     {/* ID Tamu */}
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '700' }}>
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--bps-navy)', fontWeight: '800' }}>
                       {g.id}
                     </td>
 
                     {/* Nama Tamu */}
                     <td>
-                      <div style={{ fontWeight: '700' }}>{g.nama}</div>
-                      {g.noHp && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{g.noHp}</div>}
+                      <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{g.nama}</div>
+                      {g.noHp && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{g.noHp}</div>}
                     </td>
 
                     {/* Instansi */}
-                    <td style={{ fontWeight: '600' }}>{g.instansi}</td>
+                    <td style={{ fontWeight: '600', fontSize: '0.825rem' }}>{g.instansi}</td>
 
                     {/* Tujuan */}
-                    <td>{g.tujuan}</td>
+                    <td style={{ fontSize: '0.825rem' }}>{g.tujuan}</td>
 
                     {/* Keperluan */}
-                    <td>
+                    <td style={{ fontSize: '0.825rem' }}>
                       <div>{g.keperluan}</div>
-                      {g.catatan && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{g.catatan}"</div>}
+                      {g.catatan && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{g.catatan}"</div>}
                     </td>
 
                     {/* Rombongan */}
-                    <td style={{ textAlign: 'center', fontWeight: '700' }}>{g.jumlah || 1} orang</td>
+                    <td style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.825rem' }}>{g.jumlah || 1} org</td>
 
                     {/* Status Badge with Click to Cycle */}
                     <td style={{ textAlign: 'center' }}>
                       <button 
                         onClick={() => cycleStatus(g)}
-                        title="Klik untuk mengubah status kunjungan secara instan"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                        title="Klik untuk mengubah status kunjungan"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                       >
                         {g.status === 'Selesai' && (
                           <span className="status-badge status-selesai">✓ Selesai</span>
                         )}
                         {g.status === 'Sedang Bertemu' && (
-                          <span className="status-badge status-bertemu">⏳ Sedang Bertemu</span>
+                          <span className="status-badge status-bertemu">⏳ Bertemu</span>
                         )}
                         {g.status === 'Menunggu' && (
                           <span className="status-badge status-menunggu">🔔 Menunggu</span>
@@ -391,20 +390,20 @@ export default function SpreadsheetTable({
 
                     {/* Actions */}
                     <td style={{ textAlign: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
                         <button 
                           className="btn btn-secondary btn-icon btn-sm"
                           onClick={() => onShowPass(g)}
-                          title="Cetak Tiket Pass Tamu"
+                          title="Cetak Pass Tamu"
                         >
-                          <Printer size={14} />
+                          <Printer size={13} />
                         </button>
                         <button 
                           className="btn btn-secondary btn-icon btn-sm"
                           onClick={() => onEditGuest(g)}
-                          title="Edit Data Tamu"
+                          title="Edit Data"
                         >
-                          <Edit3 size={14} />
+                          <Edit3 size={13} />
                         </button>
                         <button 
                           className="btn btn-danger btn-icon btn-sm"
@@ -415,7 +414,7 @@ export default function SpreadsheetTable({
                           }}
                           title="Hapus Data"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>
