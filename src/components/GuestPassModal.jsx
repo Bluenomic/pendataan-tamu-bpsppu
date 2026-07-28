@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Printer, Building2, User, Clock, QrCode, CheckCircle } from 'lucide-react';
+import { X, Printer, Clock, QrCode, CheckCircle, MapPin } from 'lucide-react';
 
 export default function GuestPassModal({ guest, officeName, onClose }) {
   if (!guest) return null;
@@ -10,92 +10,103 @@ export default function GuestPassModal({ guest, officeName, onClose }) {
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
+      <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '520px' }}>
         
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--bg-card-border)', paddingBottom: '0.75rem' }}>
-          <span style={{ fontWeight: '800', fontSize: '1rem', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <CheckCircle size={18} color="var(--success)" /> Kartu Pass Tamu Digital
+        {/* Modal Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.65rem' }}>
+          <span style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--bps-navy)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <CheckCircle size={18} color="var(--success)" /> Kartu Pass Tamu Digital PST BPS PPU
           </span>
           <button className="btn btn-secondary btn-icon" onClick={onClose}>
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Printable Pass Area */}
+        {/* Printable Pass Ticket - BPS PPU Official Styling */}
         <div id="printable-pass" style={{ 
           background: '#ffffff', 
-          color: '#0f172a', 
+          color: '#1e293b', 
           padding: '1.75rem', 
-          borderRadius: '16px',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
-          border: '2px dashed #cbd5e1'
+          borderRadius: '12px',
+          boxShadow: '0 10px 30px rgba(0, 52, 103, 0.12)',
+          border: '2px solid #024282',
+          fontFamily: "'Plus Jakarta Sans', sans-serif"
         }}>
           {/* Header BPS Badge */}
-          <div style={{ textAlign: 'center', borderBottom: '2px solid #e2e8f0', paddingBottom: '1rem', marginBottom: '1.25rem' }}>
-            <div style={{ background: '#312e81', color: '#fff', padding: '0.5rem', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <Building2 size={22} color="#fff" />
-              <span style={{ fontWeight: '800', fontSize: '0.9rem', letterSpacing: '0.03em' }}>
-                BADAN PUSAT STATISTIK
-              </span>
+          <div style={{ textAlign: 'center', borderBottom: '2px solid #0099db', paddingBottom: '1rem', marginBottom: '1.15rem' }}>
+            <div style={{ background: '#024282', color: '#fff', padding: '0.65rem 1rem', borderRadius: '8px', display: 'inline-flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.4rem' }}>
+              <img 
+                src="/logo-bps.png" 
+                alt="Logo BPS" 
+                style={{ height: '36px', objectFit: 'contain', background: '#fff', padding: '2px', borderRadius: '4px' }} 
+              />
+              <div style={{ textAlign: 'left' }}>
+                <span style={{ fontWeight: '800', fontSize: '0.85rem', letterSpacing: '0.04em', display: 'block', fontStyle: 'italic' }}>
+                  BADAN PUSAT STATISTIK
+                </span>
+                <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#38bdf8', letterSpacing: '0.02em', display: 'block', fontStyle: 'italic' }}>
+                  KABUPATEN PENAJAM PASER UTARA
+                </span>
+              </div>
             </div>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: '0.25rem 0 0', color: '#1e1b4b' }}>
-              KARTU AKSES KUNJUNGAN TAMU
+            
+            <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: '0.4rem 0 0', color: '#024282', letterSpacing: '-0.01em' }}>
+              PAS KUNJUNGAN PELAYANAN STATISTIK TERPADU
             </h3>
-            <div style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: '700', color: '#4338ca', marginTop: '0.2rem' }}>
-              {guest.id}
+            <div style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: '800', color: '#0099db', marginTop: '0.2rem' }}>
+              ID: {guest.id}
             </div>
           </div>
 
-          {/* Guest Info Grid */}
+          {/* Guest Info Details */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
             
-            <div style={{ background: '#f8fafc', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '600' }}>NAMA TAMU / PENANGGUNG JAWAB</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: '800', color: '#0f172a' }}>{guest.nama}</div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '600', color: '#475569' }}>{guest.instansi}</div>
+            <div style={{ background: '#f8fafc', padding: '0.85rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>NAMA TAMU / PENANGGUNG JAWAB</div>
+              <div style={{ fontSize: '1.15rem', fontWeight: '800', color: '#024282' }}>{guest.nama}</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Instansi: {guest.instansi}</div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>TUJUAN UNIT</div>
-                <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{guest.tujuan}</div>
+              <div style={{ background: '#f8fafc', padding: '0.65rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>TUJUAN UNIT</div>
+                <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#024282' }}>{guest.tujuan}</div>
               </div>
-              <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>ROMBONGAN</div>
+              <div style={{ background: '#f8fafc', padding: '0.65rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>ROMBONGAN</div>
                 <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{guest.jumlah || 1} Orang</div>
               </div>
             </div>
 
-            <div style={{ background: '#f8fafc', padding: '0.6rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>KEPERLUAN</div>
+            <div style={{ background: '#f8fafc', padding: '0.65rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>KEPERLUAN KUNJUNGAN</div>
               <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{guest.keperluan}</div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#e0e7ff', padding: '0.6rem 0.85rem', borderRadius: '8px', border: '1px solid #c7d2fe', fontSize: '0.8rem', color: '#3730a3', fontWeight: '700' }}>
-              <span>WAKTU: {guest.tanggal}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#e0f2fe', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #7dd3fc', fontSize: '0.8rem', color: '#0369a1', fontWeight: '700' }}>
+              <span>TANGGAL: {guest.tanggal}</span>
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                <Clock size={13} /> {guest.jamMasuk} WIB
+                <Clock size={13} /> {guest.jamMasuk}
               </span>
             </div>
 
           </div>
 
-          {/* QR Code Graphic & Footer */}
-          <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '600' }}>VALIDASI PETUGAS SECURITY:</div>
-              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#10b981', marginTop: '0.2rem' }}>
-                ✓ VERIFIED DIGITALLY
+          {/* Footer & Office Address */}
+          <div style={{ marginTop: '1.15rem', paddingTop: '0.85rem', borderTop: '1px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>
+              <div style={{ fontWeight: '800', color: '#16a34a' }}>✓ TERVERIFIKASI SISTEM PST</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', marginTop: '0.15rem' }}>
+                <MapPin size={11} /> Jl. Provinsi Km.09 Nipah-Nipah, Penajam
               </div>
             </div>
-            <div style={{ background: '#f1f5f9', padding: '0.5rem', borderRadius: '8px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
-              <QrCode size={40} color="#312e81" />
+            <div style={{ background: '#f1f5f9', padding: '0.4rem', borderRadius: '8px', border: '1px solid #cbd5e1', textAlign: 'center' }}>
+              <QrCode size={40} color="#024282" />
             </div>
           </div>
         </div>
 
-        {/* Buttons */}
+        {/* Action Buttons */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '1.25rem' }}>
           <button className="btn btn-secondary" onClick={onClose}>Tutup</button>
           <button className="btn btn-primary" onClick={handlePrint}>

@@ -44,7 +44,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
 
   const tujuanOptions = [
     'Pelayanan Statistik Terpadu (PST)',
-    'Drs. Supriyadi (Kepala BPS)',
+    'Kepala BPS Kabupaten Penajam Paser Utara',
     'Subbagian Umum & Kepegawaian',
     'Tim Neraca Wilayah & Analisis Statistik',
     'Tim Statistik Sosial',
@@ -75,7 +75,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     const x = (e.clientX || (e.touches && e.touches[0].clientX)) - rect.left;
     const y = (e.clientY || (e.touches && e.touches[0].clientY)) - rect.top;
     ctx.lineTo(x, y);
-    ctx.strokeStyle = '#4f46e5';
+    ctx.strokeStyle = '#024282';
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.stroke();
@@ -110,10 +110,10 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     const mins = String(now.getMinutes()).padStart(2, '0');
 
     const newGuest = {
-      id: `BPS-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `BPS-PPU-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
       ...formData,
       tanggal: now.toISOString().split('T')[0],
-      jamMasuk: `${hours}:${mins}`,
+      jamMasuk: `${hours}:${mins} WITA`,
       jamKeluar: '-',
       status: 'Menunggu',
       ttd: ttdDataUrl
@@ -155,13 +155,13 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
         
         {/* Form Container */}
         <div className="glass-panel" style={{ padding: '1.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--bg-card-border)', paddingBottom: '1rem' }}>
-            <div style={{ background: 'var(--accent-gradient)', padding: '0.5rem', borderRadius: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '1rem' }}>
+            <div style={{ background: '#024282', padding: '0.5rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Sparkles size={20} color="#fff" />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>Formulir Registrasi Kunjungan</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Silakan isi data tamu untuk mencetak Pass Kunjungan</p>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Formulir Registrasi Kunjungan</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Silakan isi data tamu untuk mencetak Pass Kunjungan PST</p>
             </div>
           </div>
 
@@ -208,7 +208,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 <input 
                   type="text" 
                   className="form-input"
-                  placeholder="337401..."
+                  placeholder="640901..."
                   value={formData.nik}
                   onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
                 />
@@ -223,7 +223,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 <input 
                   type="text" 
                   className="form-input"
-                  placeholder="Contoh: Bappeda Provinsi / Universitas Diponegoro"
+                  placeholder="Contoh: Bappeda Kab. Penajam Paser Utara / Dinas Kominfo"
                   value={formData.instansi}
                   onChange={(e) => setFormData({ ...formData, instansi: e.target.value })}
                   required
@@ -308,7 +308,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                     <RotateCcw size={12} /> Hapus TTD
                   </button>
                 </div>
-                <div style={{ border: '1px dashed var(--accent-primary)', borderRadius: '10px', background: 'var(--bg-secondary)', overflow: 'hidden' }}>
+                <div style={{ border: '1.5px dashed var(--bps-cyan)', borderRadius: '8px', background: 'var(--bps-card)', overflow: 'hidden' }}>
                   <canvas 
                     ref={canvasRef}
                     width={500}
@@ -330,7 +330,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
             <button 
               type="submit" 
               className="btn btn-primary"
-              style={{ width: '100%', padding: '0.85rem', marginTop: '1rem', fontSize: '1rem' }}
+              style={{ width: '100%', padding: '0.85rem', marginTop: '1rem', fontSize: '0.95rem' }}
             >
               <CheckCircle size={18} />
               Simpan & Cetak Pass Tamu
@@ -338,52 +338,54 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
           </form>
         </div>
 
-        {/* Live Pass Preview Card */}
+        {/* Live Pass Preview Card - FIXED DARK THEME BUG */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div className="glass-panel" style={{ padding: '1.5rem', background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.95))' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1px solid var(--bg-card-border)', paddingBottom: '0.75rem' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <QrCode size={16} /> Preview Ticket Pass
+          <div className="glass-panel" style={{ padding: '1.5rem', background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.75rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '800', color: 'var(--bps-navy)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <QrCode size={16} color="var(--bps-cyan)" /> Preview Ticket Pass
               </span>
               <span className="status-badge status-menunggu">Draft</span>
             </div>
 
             <div style={{ textAlign: 'center', margin: '1rem 0' }}>
-              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'var(--accent-gradient)', margin: '0 auto 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: '#024282', margin: '0 auto 0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(2, 66, 130, 0.2)' }}>
                 <User size={32} color="#fff" />
               </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0 }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
                 {formData.nama || 'Nama Tamu'}
               </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0.75rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.2rem 0 0.75rem', fontWeight: '600' }}>
                 {formData.instansi || 'Instansi / Perusahaan'}
               </p>
             </div>
 
-            <div style={{ background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.85rem' }}>
+            <div style={{ background: 'var(--bps-bg)', padding: '1rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.85rem', border: '1px solid var(--bps-card-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Tujuan Unit:</span>
-                <span style={{ fontWeight: '600', textAlign: 'right' }}>{formData.tujuan}</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Tujuan Unit:</span>
+                <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{formData.tujuan}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Keperluan:</span>
-                <span style={{ fontWeight: '600', textAlign: 'right' }}>{formData.keperluan}</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Keperluan:</span>
+                <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{formData.keperluan}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Jumlah Rombongan:</span>
-                <span style={{ fontWeight: '600' }}>{formData.jumlah} Orang</span>
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Jumlah Rombongan:</span>
+                <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{formData.jumlah} Orang</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'var(--text-muted)' }}>Waktu Kedatangan:</span>
-                <span style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                  <Clock size={13} /> {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Waktu Kedatangan:</span>
+                <span style={{ fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.2rem', color: 'var(--text-primary)' }}>
+                  <Clock size={13} color="var(--bps-cyan)" /> {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WITA
                 </span>
               </div>
             </div>
 
-            <div style={{ marginTop: '1.25rem', padding: '0.75rem', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '8px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+            <div style={{ marginTop: '1.25rem', padding: '0.75rem', background: 'rgba(0, 153, 219, 0.08)', border: '1px solid rgba(0, 153, 219, 0.2)', borderRadius: '8px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
               📌 Data tamu akan otomatis disimpan ke sistem lokal & disinkronkan ke Google Sheets jika tersambung.
             </div>
+
           </div>
         </div>
 

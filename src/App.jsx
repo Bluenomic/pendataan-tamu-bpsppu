@@ -16,7 +16,7 @@ import {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('form');
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light'); // Set light-theme as default
   const [guests, setGuests] = useState([]);
   const [config, setConfig] = useState(getAppConfig());
   
@@ -53,8 +53,8 @@ export default function App() {
   const handleAddNewManual = () => {
     const now = new Date();
     const manualGuest = {
-      id: `BPS-MAN-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
-      nama: 'Tamu Barus',
+      id: `BPS-PPU-MAN-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
+      nama: 'Tamu Baru',
       noHp: '-',
       instansi: 'Umum / Instansi',
       nik: '-',
@@ -62,7 +62,7 @@ export default function App() {
       keperluan: 'Konsultasi Data & Informasi Statistik',
       jumlah: 1,
       tanggal: now.toISOString().split('T')[0],
-      jamMasuk: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
+      jamMasuk: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`,
       jamKeluar: '-',
       status: 'Menunggu',
       catatan: 'Diinput manual dari tabel',
@@ -128,7 +128,7 @@ export default function App() {
       />
 
       {/* Main View Content */}
-      <main style={{ flex: 1, paddingTop: '1rem' }}>
+      <main style={{ flex: 1, paddingTop: '1.25rem' }}>
         {activeTab === 'form' && (
           <GuestForm 
             onAddGuest={handleAddGuest}
@@ -160,12 +160,12 @@ export default function App() {
         padding: '1.25rem', 
         fontSize: '0.8rem', 
         color: 'var(--text-muted)',
-        borderTop: '1px solid var(--bg-card-border)',
-        background: 'var(--bg-glass)',
+        borderTop: '1px solid var(--bps-card-border)',
+        background: 'var(--bps-card)',
         marginTop: '2rem'
       }}>
         <div>
-          © 2026 <b>BPS Buku Tamu Digital</b> • Dikembangkan untuk Program Magang Mitra Badan Pusat Statistik
+          © 2026 <b>BPS Buku Tamu Digital</b> • Badan Pusat Statistik Kabupaten Penajam Paser Utara
         </div>
         <div style={{ fontSize: '0.75rem', marginTop: '0.2rem', opacity: 0.8 }}>
           Terintegrasi Excel Spreadsheet Export (.xlsx) & Google Sheets Webhook Sync

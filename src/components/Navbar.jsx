@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  Building2, 
   FileSpreadsheet, 
   UserPlus, 
   BarChart3, 
@@ -9,7 +8,10 @@ import {
   Moon, 
   Share2, 
   CheckCircle2, 
-  AlertCircle 
+  AlertCircle,
+  X,
+  MapPin,
+  Clock
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -21,136 +23,224 @@ export default function Navbar({
   openConfigModal,
   totalCount 
 }) {
+  const [showBanner, setShowBanner] = useState(true);
   const isSheetsConnected = Boolean(config?.webhookUrl);
 
   return (
-    <header className="glass-panel" style={{ margin: '1rem', padding: '0.85rem 1.5rem', borderRadius: '16px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
-        
-        {/* Left Side: Brand Logo & Title */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-          <div style={{
-            background: 'var(--accent-gradient)',
-            padding: '0.65rem',
-            borderRadius: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 15px var(--accent-glow)'
-          }}>
-            <Building2 size={24} color="#ffffff" />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h1 style={{ fontSize: '1.2rem', fontWeight: '800', letterSpacing: '-0.02em', margin: 0 }} className="gradient-text">
-                {config.officeName || 'Badan Pusat Statistik (BPS)'}
+    <header style={{ width: '100%' }}>
+      
+      {/* 1. Official BPS PPU Navy Header Bar (#024282) */}
+      <div style={{ 
+        background: '#024282', 
+        color: '#ffffff', 
+        padding: '0.85rem 1.5rem',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+      }}>
+        <div style={{ 
+          maxWidth: '1400px', 
+          margin: '0 auto', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between', 
+          flexWrap: 'wrap', 
+          gap: '1rem' 
+        }}>
+          
+          {/* Official BPS Logo & Name */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            
+            {/* Official BPS Logo PNG */}
+            <img 
+              src="/logo-bps.png" 
+              alt="Logo BPS" 
+              style={{ height: '38px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }} 
+            />
+
+            <div>
+              <h1 style={{ 
+                fontSize: '1.15rem', 
+                fontWeight: '800', 
+                letterSpacing: '0.02em', 
+                color: '#ffffff', 
+                margin: 0,
+                fontStyle: 'italic',
+                fontFamily: 'sans-serif'
+              }}>
+                BADAN PUSAT STATISTIK
               </h1>
-              <span style={{
-                fontSize: '0.7rem',
-                fontWeight: '700',
-                padding: '0.15rem 0.5rem',
-                borderRadius: '20px',
-                background: 'rgba(99, 102, 241, 0.15)',
-                color: 'var(--accent-primary)',
-                border: '1px solid rgba(99, 102, 241, 0.3)'
+              <div style={{ 
+                fontSize: '0.85rem', 
+                fontWeight: '700', 
+                color: '#38bdf8', 
+                letterSpacing: '0.05em',
+                fontStyle: 'italic'
               }}>
-                E-Buku Tamu v1.0
-              </span>
+                KABUPATEN PENAJAM PASER UTARA
+              </div>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
-              {config.subTitle || 'Pelayanan Terpadu & Buku Tamu Digital'}
-            </p>
           </div>
-        </div>
 
-        {/* Middle Navigation Tabs */}
-        <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', padding: '0.35rem', borderRadius: '12px', border: '1px solid var(--bg-card-border)' }}>
-          <button 
-            className={`btn btn-sm ${activeTab === 'form' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('form')}
-            style={{ border: activeTab === 'form' ? 'none' : 'transparent' }}
-          >
-            <UserPlus size={16} />
-            Input Tamu
-          </button>
-          
-          <button 
-            className={`btn btn-sm ${activeTab === 'table' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('table')}
-            style={{ border: activeTab === 'table' ? 'none' : 'transparent' }}
-          >
-            <FileSpreadsheet size={16} />
-            Data Spreadsheet
-            {totalCount > 0 && (
-              <span style={{ 
-                background: activeTab === 'table' ? 'rgba(255,255,255,0.25)' : 'var(--accent-primary)',
-                color: '#fff',
-                fontSize: '0.7rem',
-                padding: '0.1rem 0.45rem',
-                borderRadius: '10px',
-                marginLeft: '0.25rem'
-              }}>
-                {totalCount}
-              </span>
-            )}
-          </button>
+          {/* Navigation Tabs (Beranda, Layanan, Spreadsheet View, Analytics) */}
+          <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button 
+              className={`bps-tab-btn ${activeTab === 'form' ? 'active' : ''}`}
+              onClick={() => setActiveTab('form')}
+            >
+              <UserPlus size={16} />
+              Input Tamu PST
+            </button>
+            
+            <button 
+              className={`bps-tab-btn ${activeTab === 'table' ? 'active' : ''}`}
+              onClick={() => setActiveTab('table')}
+            >
+              <FileSpreadsheet size={16} />
+              Tabel Spreadsheet
+              {totalCount > 0 && (
+                <span style={{ 
+                  background: '#0099db',
+                  color: '#fff',
+                  fontSize: '0.7rem',
+                  padding: '0.1rem 0.45rem',
+                  borderRadius: '10px',
+                  marginLeft: '0.2rem'
+                }}>
+                  {totalCount}
+                </span>
+              )}
+            </button>
 
-          <button 
-            className={`btn btn-sm ${activeTab === 'analytics' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('analytics')}
-            style={{ border: activeTab === 'analytics' ? 'none' : 'transparent' }}
-          >
-            <BarChart3 size={16} />
-            Analitik
-          </button>
-        </nav>
+            <button 
+              className={`bps-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+              onClick={() => setActiveTab('analytics')}
+            >
+              <BarChart3 size={16} />
+              Analitik
+            </button>
+          </nav>
 
-        {/* Right Action Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-          
-          {/* Google Sheets Sync Badge & Button */}
-          <button 
-            className="btn btn-secondary btn-sm"
-            onClick={openConfigModal}
-            title="Pengaturan Google Sheets Webhook Sync"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
-          >
-            <Share2 size={15} color={isSheetsConnected ? 'var(--success)' : 'var(--warning)'} />
-            <span style={{ fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-              Google Sheets: 
+          {/* Right Action Icons & Sync Status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            
+            {/* Google Sheets Sync Badge */}
+            <button 
+              onClick={openConfigModal}
+              title="Pengaturan Google Sheets Webhook Sync"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                padding: '0.4rem 0.85rem',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <Share2 size={14} color={isSheetsConnected ? '#4ade80' : '#fbbf24'} />
+              <span>Google Sheets: </span>
               {isSheetsConnected ? (
-                <span style={{ color: 'var(--success)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                <span style={{ color: '#4ade80', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                   <CheckCircle2 size={13} /> Aktif
                 </span>
               ) : (
-                <span style={{ color: 'var(--warning)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                  <AlertCircle size={13} /> Hubungkan
+                <span style={{ color: '#fbbf24', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <AlertCircle size={13} /> Sinkron
                 </span>
               )}
-            </span>
-          </button>
+            </button>
 
-          {/* Settings Modal Button */}
-          <button 
-            className="btn btn-secondary btn-icon"
-            onClick={openConfigModal}
-            title="Pengaturan Aplikasi"
-          >
-            <Settings size={18} />
-          </button>
+            {/* Settings Button */}
+            <button 
+              onClick={openConfigModal}
+              title="Pengaturan"
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                padding: '0.45rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <Settings size={17} />
+            </button>
 
-          {/* Dark / Light Mode Toggle */}
-          <button 
-            className="btn btn-secondary btn-icon"
-            onClick={toggleTheme}
-            title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
-          >
-            {theme === 'dark' ? <Sun size={18} color="#f59e0b" /> : <Moon size={18} color="#4f46e5" />}
-          </button>
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Ganti ke Mode Terang' : 'Ganti ke Mode Gelap'}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                color: '#ffffff',
+                padding: '0.45rem',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              {theme === 'dark' ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#38bdf8" />}
+            </button>
+
+          </div>
 
         </div>
-
       </div>
+
+      {/* 2. Official Bright Cyan Banner (#0099db) From BPS PPU Website */}
+      {showBanner && (
+        <div style={{ 
+          background: '#0099db', 
+          color: '#ffffff', 
+          padding: '0.65rem 1.5rem', 
+          fontSize: '0.85rem',
+          fontWeight: '500'
+        }}>
+          <div style={{ 
+            maxWidth: '1400px', 
+            margin: '0 auto', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            gap: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
+              <Clock size={16} style={{ flexShrink: 0 }} />
+              <div>
+                <b>Pelayanan Statistik Terpadu (PST)</b> dapat dikunjungi pada jam kerja <b>Senin–Kamis 07.30–16.00 WITA</b> dan <b>Jumat 07.30–16.30 WITA</b>.
+                <span style={{ marginLeft: '0.5rem', opacity: 0.9 }}>
+                  <MapPin size={13} style={{ display: 'inline', marginRight: '2px' }} />
+                  Alamat: Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411
+                </span>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowBanner(false)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.2)',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '4px',
+                padding: '0.25rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+              title="Tutup Pengumuman"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
+
     </header>
   );
 }

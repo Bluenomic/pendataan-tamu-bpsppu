@@ -5,9 +5,7 @@ import {
   TrendingUp, 
   Clock, 
   Building2, 
-  FileText, 
-  PieChart, 
-  CheckCircle2 
+  FileText 
 } from 'lucide-react';
 
 export default function AnalyticsView({ guests }) {
@@ -66,43 +64,49 @@ export default function AnalyticsView({ guests }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         
         {/* Total Tamu Card */}
-        <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(30, 41, 59, 0.8))' }}>
+        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Total Seluruh Tamu</span>
-            <div style={{ background: 'var(--accent-gradient)', padding: '0.4rem', borderRadius: '8px' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Total Seluruh Tamu</span>
+            <div style={{ background: '#024282', padding: '0.45rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
               <Users size={18} color="#fff" />
             </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800' }}>{stats.totalGuests} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '400' }}>orang</span></div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
-            Dari {stats.totalVisits} sesi kunjungan terdaftar
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+            {stats.totalGuests} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>orang</span>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: '600' }}>
+            Dari {stats.totalVisits} sesi kunjungan PST
           </div>
         </div>
 
         {/* Tamu Hari Ini Card */}
-        <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(30, 41, 59, 0.8))' }}>
+        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Kunjungan Hari Ini</span>
-            <div style={{ background: 'var(--info)', padding: '0.4rem', borderRadius: '8px' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Kunjungan Hari Ini</span>
+            <div style={{ background: '#0099db', padding: '0.45rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
               <Calendar size={18} color="#fff" />
             </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800' }}>{stats.todayGuests} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '400' }}>orang</span></div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+            {stats.todayGuests} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>orang</span>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--success)', marginTop: '0.3rem', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '700' }}>
             <TrendingUp size={12} /> Hari ini: {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short' })}
           </div>
         </div>
 
         {/* Sedang Bertemu Card */}
-        <div className="glass-card" style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(30, 41, 59, 0.8))' }}>
+        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '600' }}>Sedang Bertemu / Aktif</span>
-            <div style={{ background: 'var(--success)', padding: '0.4rem', borderRadius: '8px' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Sedang Bertemu / Aktif</span>
+            <div style={{ background: '#16a34a', padding: '0.45rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
               <Clock size={18} color="#fff" />
             </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--info)' }}>{stats.activeMeeting} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '400' }}>sesi</span></div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem' }}>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--bps-navy)' }}>
+            {stats.activeMeeting} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>sesi</span>
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: '600' }}>
             Menunggu: {stats.waiting} | Selesai: {stats.completed}
           </div>
         </div>
@@ -114,9 +118,9 @@ export default function AnalyticsView({ guests }) {
         
         {/* Top Keperluan Breakdown */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--bg-card-border)', paddingBottom: '0.75rem' }}>
-            <FileText size={20} color="var(--accent-primary)" />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>Statistik Kategori Keperluan</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.75rem' }}>
+            <FileText size={20} color="var(--bps-navy)" />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Statistik Kategori Keperluan</h3>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -125,15 +129,15 @@ export default function AnalyticsView({ guests }) {
               return (
                 <div key={index}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.3rem' }}>
-                    <span style={{ fontWeight: '600' }}>{keperluan}</span>
-                    <span style={{ color: 'var(--accent-primary)', fontWeight: '700' }}>{count} ({percentage}%)</span>
+                    <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{keperluan}</span>
+                    <span style={{ color: 'var(--bps-cyan)', fontWeight: '800' }}>{count} ({percentage}%)</span>
                   </div>
-                  <div style={{ width: '100%', height: '8px', background: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--bps-bg)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--bps-card-border)' }}>
                     <div 
                       style={{ 
                         width: `${percentage}%`, 
                         height: '100%', 
-                        background: 'var(--accent-gradient)',
+                        background: '#0099db',
                         borderRadius: '4px',
                         transition: 'width 0.5s ease-out'
                       }} 
@@ -147,9 +151,9 @@ export default function AnalyticsView({ guests }) {
 
         {/* Top Instansi Breakdown */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--bg-card-border)', paddingBottom: '0.75rem' }}>
-            <Building2 size={20} color="var(--info)" />
-            <h3 style={{ fontSize: '1.1rem', fontWeight: '700', margin: 0 }}>Instansi / Perusahaan Terbanyak</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.75rem' }}>
+            <Building2 size={20} color="var(--bps-navy)" />
+            <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Instansi / Perusahaan Terbanyak</h3>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -161,9 +165,9 @@ export default function AnalyticsView({ guests }) {
                   alignItems: 'center', 
                   justifyContent: 'space-between',
                   padding: '0.75rem 1rem',
-                  background: 'var(--bg-secondary)',
-                  borderRadius: '10px',
-                  border: '1px solid var(--bg-card-border)'
+                  background: 'var(--bps-bg)',
+                  borderRadius: '8px',
+                  border: '1px solid var(--bps-card-border)'
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -171,8 +175,8 @@ export default function AnalyticsView({ guests }) {
                     width: '24px', 
                     height: '24px', 
                     borderRadius: '50%', 
-                    background: 'var(--accent-glow)', 
-                    color: 'var(--accent-primary)',
+                    background: '#024282', 
+                    color: '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -181,7 +185,7 @@ export default function AnalyticsView({ guests }) {
                   }}>
                     {index + 1}
                   </span>
-                  <span style={{ fontWeight: '600', fontSize: '0.9rem' }}>{instansi}</span>
+                  <span style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-primary)' }}>{instansi}</span>
                 </div>
                 <span className="status-badge status-bertemu" style={{ fontSize: '0.8rem' }}>
                   {count} Kunjungan
