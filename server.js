@@ -10,17 +10,12 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Initialize SQLite Database
 const dbPath = path.join(__dirname, 'buku_tamu.db');
 const db = new Database(dbPath);
 
-console.log(`[SQLite] Database connected at: ${dbPath}`);
-
-// Create Tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS guests (
     id TEXT PRIMARY KEY,
@@ -45,7 +40,6 @@ db.exec(`
   );
 `);
 
-// Helper to get current Admin PIN from SQLite DB
 function getAdminPinFromDb() {
   try {
     const row = db.prepare("SELECT value FROM config WHERE key = 'adminPin'").get();
@@ -55,7 +49,6 @@ function getAdminPinFromDb() {
   }
 }
 
-// Middleware: Protect /api/admin/* endpoints with PIN Header Verification
 function verifyAdminPinMiddleware(req, res, next) {
   const inputPin = req.headers['x-admin-pin'];
   const actualPin = getAdminPinFromDb();
@@ -63,17 +56,12 @@ function verifyAdminPinMiddleware(req, res, next) {
   if (!inputPin || inputPin !== actualPin) {
     return res.status(403).json({ 
       success: false, 
-      error: 'Akses Ditolak (403 Forbidden): PIN Admin tidak valid atau tidak disertakan.' 
+      error: 'Akses Ditolak (403 Forbidden): PIN Admin tidak valid.' 
     });
   }
   next();
 }
 
-/* ==========================================================================
-   1. PUBLIC ENDPOINTS (/api/public/*) - Dipakai Kios Tamu Umum
-   ========================================================================== */
-
-// POST /api/public/register - Tamu mendaftar baru (Tanpa PIN)
 app.post('/api/public/register', (req, res) => {
   try {
     const guest = req.body;
@@ -103,14 +91,12 @@ app.post('/api/public/register', (req, res) => {
       ttd: guest.ttd || ''
     });
 
-    console.log(`[Public API] Tamu baru terdaftar: ${guest.nama} (${guest.id})`);
-    res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan ke SQLite DB.' });
+    res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// GET /api/public/config - Ambil konfigurasi umum BPS PPU (Tanpa PIN)
 app.get('/api/public/config', (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM config').all();
@@ -130,12 +116,6 @@ app.get('/api/public/config', (req, res) => {
   }
 });
 
-
-/* ==========================================================================
-   2. ADMIN & MANAGEMENT ENDPOINTS (/api/admin/*) - Terproteksi PIN Admin
-   ========================================================================== */
-
-// POST /api/admin/login - Verifikasi PIN Admin
 app.post('/api/admin/login', (req, res) => {
   try {
     const { pin } = req.body;
@@ -150,7 +130,6 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
-// GET /api/admin/guests - Ambil seluruh data tamu untuk tabel admin (Butuh PIN)
 app.get('/api/admin/guests', verifyAdminPinMiddleware, (req, res) => {
   try {
     const guests = db.prepare('SELECT * FROM guests ORDER BY tanggal DESC, jamMasuk DESC').all();
@@ -160,7 +139,6 @@ app.get('/api/admin/guests', verifyAdminPinMiddleware, (req, res) => {
   }
 });
 
-// PUT /api/admin/guests/:id - Update data/status kunjungan tamu (Butuh PIN)
 app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
@@ -200,26 +178,22 @@ app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
       ttd: guest.ttd || ''
     });
 
-    console.log(`[Admin API] Data tamu ${id} diperbarui.`);
-    res.json({ success: true, message: 'Data tamu berhasil diperbarui di SQLite.' });
+    res.json({ success: true, message: 'Data tamu berhasil diperbarui.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// DELETE /api/admin/guests/:id - Hapus data tamu (Butuh PIN)
 app.delete('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM guests WHERE id = ?').run(id);
-    console.log(`[Admin API] Data tamu ${id} dihapus.`);
-    res.json({ success: true, message: 'Data tamu berhasil dihapus dari SQLite.' });
+    res.json({ success: true, message: 'Data tamu berhasil dihapus.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/admin/guests/import - Import batch data Excel (Butuh PIN)
 app.post('/api/admin/guests/import', verifyAdminPinMiddleware, (req, res) => {
   try {
     const guestList = req.body;
@@ -250,13 +224,12 @@ app.post('/api/admin/guests/import', verifyAdminPinMiddleware, (req, res) => {
     });
 
     insertMany(guestList);
-    res.json({ success: true, count: guestList.length, message: 'Impor Excel ke SQLite berhasil.' });
+    res.json({ success: true, count: guestList.length, message: 'Impor Excel berhasil.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// POST /api/admin/config - Simpan Pengaturan & PIN Admin baru (Butuh PIN)
 app.post('/api/admin/config', verifyAdminPinMiddleware, (req, res) => {
   try {
     const newConfig = req.body;
@@ -268,16 +241,12 @@ app.post('/api/admin/config', verifyAdminPinMiddleware, (req, res) => {
       }
     });
 
-    console.log('[SQLite Config] PIN Admin & Pengaturan berhasil disimpan di SQLite DB:', newConfig);
-    res.json({ success: true, message: 'Pengaturan & PIN Admin disimpan di SQLite.' });
+    res.json({ success: true, message: 'Pengaturan & PIN Admin disimpan.' });
   } catch (error) {
-    console.error('[SQLite Config Error]:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Start Express Server
 app.listen(PORT, () => {
-  console.log(`[SQLite Server] Express Server berjalan pada http://localhost:${PORT}`);
-  console.log(`[API Endpoints] Public: /api/public/* | Admin: /api/admin/* (Protected)`);
+  console.log(`[SQLite Server] Running at http://localhost:${PORT}`);
 });

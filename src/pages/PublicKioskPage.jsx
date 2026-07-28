@@ -6,14 +6,11 @@ import { Clock, MapPin, ShieldCheck, Lock } from 'lucide-react';
 
 export default function PublicKioskPage({ config }) {
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
-  const [showBanner, setShowBanner] = useState(true);
+  const [showBanner] = useState(true);
 
-  // Handle new guest registration from public kiosk
   const handleAddGuest = async (newGuest) => {
-    // Save to SQLite via public API
     await saveSingleGuestAsync(newGuest);
 
-    // Sync to Google Sheets if configured
     if (config.webhookUrl) {
       await syncGuestToGoogleSheets(config.webhookUrl, newGuest);
     }
@@ -22,11 +19,9 @@ export default function PublicKioskPage({ config }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bps-bg)' }}>
       
-      {/* 1. Public Kiosk Top Header (BPS PPU Branding Only - No Admin Tabs!) */}
       <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           
-          {/* Logo & Office Name */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             <img 
               src="/logo-bps.png" 
@@ -43,7 +38,6 @@ export default function PublicKioskPage({ config }) {
             </div>
           </div>
 
-          {/* Kiosk Mode Badge & Link to Admin Portal */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{ 
               background: 'rgba(255, 255, 255, 0.12)', 
@@ -60,7 +54,6 @@ export default function PublicKioskPage({ config }) {
               <ShieldCheck size={14} color="#38bdf8" /> Mode Kios Tamu PST
             </div>
 
-            {/* Admin Portal Link for Staff */}
             <a 
               href="/admin" 
               style={{ 
@@ -82,7 +75,6 @@ export default function PublicKioskPage({ config }) {
         </div>
       </header>
 
-      {/* 2. Official Bright Cyan Banner (#0099db) */}
       {showBanner && (
         <div style={{ background: '#0099db', color: '#ffffff', padding: '0.65rem 1.5rem', fontSize: '0.85rem', fontWeight: '500' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
@@ -100,7 +92,6 @@ export default function PublicKioskPage({ config }) {
         </div>
       )}
 
-      {/* 3. Main Guest Registration Form */}
       <main style={{ flex: 1, paddingTop: '1.5rem' }}>
         <GuestForm 
           onAddGuest={handleAddGuest}
@@ -108,7 +99,6 @@ export default function PublicKioskPage({ config }) {
         />
       </main>
 
-      {/* 4. Public Footer */}
       <footer style={{ 
         textAlign: 'center', 
         padding: '1.25rem', 
@@ -126,7 +116,6 @@ export default function PublicKioskPage({ config }) {
         </div>
       </footer>
 
-      {/* Guest Pass Ticket Modal */}
       {selectedPassGuest && (
         <GuestPassModal 
           guest={selectedPassGuest}

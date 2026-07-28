@@ -1,11 +1,7 @@
 import * as XLSX from 'xlsx';
 
-const STORAGE_KEY = 'bps_ppu_buku_tamu_data_v2';
-const CONFIG_KEY = 'bps_ppu_buku_tamu_config_v2';
-
 export const INITIAL_GUEST_DATA = [];
 
-// PUBLIC API: Register guest from Kiosk (No PIN needed)
 export const saveSingleGuestAsync = async (guest) => {
   try {
     await fetch('/api/public/register', {
@@ -14,15 +10,12 @@ export const saveSingleGuestAsync = async (guest) => {
       body: JSON.stringify(guest)
     });
   } catch (e) {
-    console.error('[Public API] Failed to save guest to SQLite:', e);
+    console.error('[Public API] Failed to save guest:', e);
   }
 };
 
-// ADMIN API: Fetch all guests for Admin Table (EXPLICIT PIN REQUIRED)
 export const getGuestDataAsync = async (adminPin) => {
-  if (!adminPin) {
-    return [];
-  }
+  if (!adminPin) return [];
 
   try {
     const response = await fetch('/api/admin/guests', {
@@ -41,11 +34,8 @@ export const getGuestDataAsync = async (adminPin) => {
   return [];
 };
 
-export const getGuestData = () => {
-  return [];
-};
+export const getGuestData = () => [];
 
-// ADMIN API: Update Single Guest (EXPLICIT PIN REQUIRED)
 export const updateSingleGuestAsync = async (guest, adminPin) => {
   if (!adminPin) return;
   try {
@@ -58,11 +48,10 @@ export const updateSingleGuestAsync = async (guest, adminPin) => {
       body: JSON.stringify(guest)
     });
   } catch (e) {
-    console.error('[Admin API] Failed to update guest in SQLite:', e);
+    console.error('[Admin API] Failed to update guest:', e);
   }
 };
 
-// ADMIN API: Delete Single Guest (EXPLICIT PIN REQUIRED)
 export const deleteSingleGuestAsync = async (id, adminPin) => {
   if (!adminPin) return;
   try {
@@ -71,11 +60,10 @@ export const deleteSingleGuestAsync = async (id, adminPin) => {
       headers: { 'x-admin-pin': adminPin }
     });
   } catch (e) {
-    console.error('[Admin API] Failed to delete guest from SQLite:', e);
+    console.error('[Admin API] Failed to delete guest:', e);
   }
 };
 
-// ADMIN API: Batch Import Guests (EXPLICIT PIN REQUIRED)
 export const importGuestsAsync = async (guestList, adminPin) => {
   if (!adminPin) return;
   try {
@@ -88,13 +76,12 @@ export const importGuestsAsync = async (guestList, adminPin) => {
       body: JSON.stringify(guestList)
     });
   } catch (e) {
-    console.error('[Admin API] Failed to import guests to SQLite:', e);
+    console.error('[Admin API] Failed to import guests:', e);
   }
 };
 
 export const saveGuestData = (guests) => {};
 
-// PUBLIC API: Fetch Public Config (No PIN)
 export const getAppConfigAsync = async () => {
   try {
     const response = await fetch('/api/public/config');
@@ -120,13 +107,9 @@ export const getAppConfig = () => {
   };
 };
 
-// ADMIN API: Save Config (PIN HEADER & BODY SENT)
 export const saveAppConfigAsync = async (config, adminPin) => {
   const pin = adminPin || config.adminPin;
-  if (!pin) {
-    console.error('[Admin API] Cannot save config: missing adminPin!');
-    return { success: false, error: 'Missing adminPin' };
-  }
+  if (!pin) return { success: false, error: 'Missing adminPin' };
 
   try {
     const response = await fetch('/api/admin/config', {
@@ -137,17 +120,15 @@ export const saveAppConfigAsync = async (config, adminPin) => {
       },
       body: JSON.stringify(config)
     });
-    const resData = await response.json();
-    return resData;
+    return await response.json();
   } catch (e) {
-    console.error('[Admin API] Failed to save config in SQLite:', e);
+    console.error('[Admin API] Failed to save config:', e);
     return { success: false, error: e.message };
   }
 };
 
 export const saveAppConfig = (config) => {};
 
-// Export Guest Data to Excel File
 export const exportToExcel = (guestList, fileName = 'Buku_Tamu_BPS_PPU.xlsx') => {
   const formattedData = guestList.map((item, index) => ({
     'No': index + 1,
@@ -177,7 +158,6 @@ export const exportToExcel = (guestList, fileName = 'Buku_Tamu_BPS_PPU.xlsx') =>
   XLSX.writeFile(workbook, fileName);
 };
 
-// Import Excel File to Guest Data
 export const importFromExcel = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -216,19 +196,16 @@ export const importFromExcel = (file) => {
   });
 };
 
-// Sync Single Guest to Google Sheets Webhook
 export const syncGuestToGoogleSheets = async (webhookUrl, guest) => {
   return syncBatchGuestsToGoogleSheets(webhookUrl, [guest]);
 };
 
-// INSTANT BATCH SYNC TO GOOGLE SHEETS (1 SINGLE HTTP REQUEST FOR ALL GUESTS!)
 export const syncBatchGuestsToGoogleSheets = async (webhookUrl, guestList) => {
   if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
   if (!guestList || guestList.length === 0) return { success: true, count: 0 };
 
   const cleanUrl = webhookUrl.trim();
 
-  // Prepare clean array payload
   const cleanBatchPayload = guestList.map(guest => ({
     id: guest.id || '-',
     nama: guest.nama || '-',
