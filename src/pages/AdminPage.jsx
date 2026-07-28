@@ -216,9 +216,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
                   autoFocus
                 />
               </div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem', display: 'block', textAlign: 'left' }}>
-                PIN bawaan default: <b>1234</b>
-              </span>
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.8rem' }}>

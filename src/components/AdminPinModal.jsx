@@ -88,9 +88,6 @@ export default function AdminPinModal({ onUnlock, onClose, targetTabName }) {
                 autoFocus
               />
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
-              PIN bawaan default: <b>1234</b>
-            </span>
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
