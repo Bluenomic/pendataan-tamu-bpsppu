@@ -37,10 +37,8 @@ export default function SpreadsheetTable({
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
 
-  // Filtered Guests Computation
   const filteredGuests = useMemo(() => {
     return guests.filter((g) => {
-      // Search match
       const query = searchQuery.toLowerCase();
       const matchesSearch = 
         g.nama.toLowerCase().includes(query) ||
@@ -49,10 +47,8 @@ export default function SpreadsheetTable({
         g.tujuan.toLowerCase().includes(query) ||
         g.id.toLowerCase().includes(query);
 
-      // Status match
       const matchesStatus = filterStatus === 'ALL' || g.status === filterStatus;
 
-      // Date match
       const today = new Date().toISOString().split('T')[0];
       let matchesDate = true;
       if (filterDate === 'TODAY') {
@@ -71,7 +67,6 @@ export default function SpreadsheetTable({
     });
   }, [guests, searchQuery, filterStatus, filterDate]);
 
-  // Handle Multi-select
   const toggleSelectAll = () => {
     if (selectedIds.length === filteredGuests.length) {
       setSelectedIds([]);
@@ -88,7 +83,6 @@ export default function SpreadsheetTable({
     }
   };
 
-  // Status Cycle: Menunggu -> Sedang Bertemu -> Selesai
   const cycleStatus = (guest) => {
     let nextStatus = 'Menunggu';
     let jamKeluar = guest.jamKeluar;
@@ -111,7 +105,6 @@ export default function SpreadsheetTable({
     });
   };
 
-  // Batch Actions
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
     if (confirm(`Yakin ingin menghapus ${selectedIds.length} data tamu terpilih?`)) {
@@ -137,7 +130,6 @@ export default function SpreadsheetTable({
     setSelectedIds([]);
   };
 
-  // File Upload Excel
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -149,7 +141,6 @@ export default function SpreadsheetTable({
     }
   };
 
-  // Trigger Google Sheets Sync
   const handleSync = async () => {
     setIsSyncing(true);
     await onSyncGoogleSheets();
@@ -159,14 +150,12 @@ export default function SpreadsheetTable({
   return (
     <div style={{ padding: '0 0.75rem 2rem 0.75rem', maxWidth: '1400px', margin: '0 auto' }}>
       
-      {/* Top Toolbar Panel - Responsive */}
-      <div className="glass-panel" style={{ padding: '1rem', marginBottom: '1rem' }}>
+      {/* Top Toolbar Panel (no-print) */}
+      <div className="glass-panel no-print" style={{ padding: '1rem', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
           
-          {/* Row 1: Search & Action Buttons */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
             
-            {/* Search Input */}
             <div style={{ position: 'relative', width: '100%', maxWidth: '380px', flex: '1 1 280px' }}>
               <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input 
@@ -179,10 +168,8 @@ export default function SpreadsheetTable({
               />
             </div>
 
-            {/* Main Action Buttons Grid/Flex */}
             <div className="admin-action-buttons-grid">
               
-              {/* Cetak Laporan PDF Official Button */}
               <button 
                 className="btn btn-primary btn-sm btn-action-touch"
                 onClick={() => setIsReportOpen(true)}
@@ -192,7 +179,6 @@ export default function SpreadsheetTable({
                 <span>Cetak Laporan PDF</span>
               </button>
 
-              {/* Export Excel Button */}
               <button 
                 className="btn btn-success btn-sm btn-action-touch"
                 onClick={() => exportToExcel(filteredGuests)}
@@ -202,14 +188,12 @@ export default function SpreadsheetTable({
                 <span>Ekspor Excel</span>
               </button>
 
-              {/* Import Excel */}
               <label className="btn btn-secondary btn-sm btn-action-touch" style={{ cursor: 'pointer' }}>
                 <Upload size={15} />
                 <span>Impor Excel</span>
                 <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} style={{ display: 'none' }} />
               </label>
 
-              {/* Google Sheets Sync Button */}
               <button 
                 className="btn btn-secondary btn-sm btn-action-touch"
                 onClick={handleSync}
@@ -220,7 +204,6 @@ export default function SpreadsheetTable({
                 <span>Sync Sheets</span>
               </button>
 
-              {/* Add Manual Guest */}
               <button 
                 className="btn btn-secondary btn-sm btn-action-touch"
                 onClick={onAddNewManual}
@@ -233,16 +216,13 @@ export default function SpreadsheetTable({
 
           </div>
 
-          {/* Row 2: Filters & Batch Operations */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', borderTop: '1px solid var(--bps-card-border)', paddingTop: '0.75rem' }}>
             
-            {/* Filter Dropdowns */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', width: '100%', maxWidth: '600px' }}>
               <span style={{ fontSize: '0.8rem', fontWeight: '700', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <Filter size={14} /> Filter:
               </span>
 
-              {/* Status Filter */}
               <select 
                 className="form-select"
                 style={{ width: 'auto', flex: 1, minWidth: '130px', padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}
@@ -255,7 +235,6 @@ export default function SpreadsheetTable({
                 <option value="Selesai">Selesai</option>
               </select>
 
-              {/* Date Filter */}
               <select 
                 className="form-select"
                 style={{ width: 'auto', flex: 1, minWidth: '130px', padding: '0.35rem 0.6rem', fontSize: '0.8rem' }}
@@ -273,7 +252,6 @@ export default function SpreadsheetTable({
               </span>
             </div>
 
-            {/* Batch Selection Operations */}
             {selectedIds.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(2, 66, 130, 0.1)', padding: '0.35rem 0.65rem', borderRadius: '0px', border: '1px solid var(--bps-navy)', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--bps-navy)' }}>
@@ -293,8 +271,8 @@ export default function SpreadsheetTable({
         </div>
       </div>
 
-      {/* Spreadsheet Grid Table (Smooth Touch Scroll Wrapper) */}
-      <div className="table-container glass-panel" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+      {/* Main Table Grid (no-print) */}
+      <div className="table-container glass-panel no-print" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
         <table className="spreadsheet-table" style={{ minWidth: '950px' }}>
           <thead>
             <tr>
@@ -336,7 +314,6 @@ export default function SpreadsheetTable({
                 return (
                   <tr key={g.id} style={{ background: isSelected ? 'rgba(2, 66, 130, 0.12)' : undefined }}>
                     
-                    {/* Checkbox */}
                     <td style={{ textAlign: 'center' }}>
                       <button 
                         onClick={() => toggleSelectOne(g.id)} 
@@ -346,10 +323,8 @@ export default function SpreadsheetTable({
                       </button>
                     </td>
 
-                    {/* No */}
                     <td style={{ fontWeight: '600', color: 'var(--text-muted)' }}>{idx + 1}</td>
 
-                    {/* Tanggal & Waktu */}
                     <td>
                       <div style={{ fontWeight: '700', fontSize: '0.8rem' }}>{g.tanggal}</div>
                       <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
@@ -357,33 +332,26 @@ export default function SpreadsheetTable({
                       </div>
                     </td>
 
-                    {/* ID Tamu */}
                     <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--bps-navy)', fontWeight: '800' }}>
                       {g.id}
                     </td>
 
-                    {/* Nama Tamu */}
                     <td>
                       <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{g.nama}</div>
                       {g.noHp && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{g.noHp}</div>}
                     </td>
 
-                    {/* Instansi */}
                     <td style={{ fontWeight: '600', fontSize: '0.825rem' }}>{g.instansi}</td>
 
-                    {/* Tujuan */}
                     <td style={{ fontSize: '0.825rem' }}>{g.tujuan}</td>
 
-                    {/* Keperluan */}
                     <td style={{ fontSize: '0.825rem' }}>
                       <div>{g.keperluan}</div>
                       {g.catatan && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{g.catatan}"</div>}
                     </td>
 
-                    {/* Rombongan */}
                     <td style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.825rem' }}>{g.jumlah || 1} org</td>
 
-                    {/* Status Badge with Click to Cycle */}
                     <td style={{ textAlign: 'center' }}>
                       <button 
                         onClick={() => cycleStatus(g)}
@@ -402,7 +370,6 @@ export default function SpreadsheetTable({
                       </button>
                     </td>
 
-                    {/* Actions */}
                     <td style={{ textAlign: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}>
                         <button 

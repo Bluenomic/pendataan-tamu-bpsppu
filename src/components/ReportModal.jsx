@@ -274,46 +274,40 @@ export default function ReportModal({ guests, config, onClose }) {
 
       </div>
 
-      {/* STRICT ISOLATED MULTI-PAGE PRINT STYLESHEET */}
+      {/* PRINT STYLESHEET */}
       <style>{`
         @page {
           size: A4 portrait;
-          margin: 12mm 12mm 12mm 12mm;
+          margin: 10mm 12mm 10mm 12mm;
         }
         @media print {
-          /* 1. HIDE ALL BACKGROUND APPLICATION UI */
-          header, 
-          footer, 
-          nav, 
-          main, 
-          .no-print,
-          #root > div > header,
-          #root > div > main,
-          #root > div > footer {
+          /* Hide non-print UI elements */
+          .no-print {
             display: none !important;
           }
           
-          body {
+          body, html, #root {
             background: #ffffff !important;
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
+            height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
           }
 
           .report-modal-overlay {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 100% !important;
-            height: auto !important;
+            position: static !important;
             background: #ffffff !important;
             padding: 0 !important;
             margin: 0 !important;
             display: block !important;
-            z-index: 999999 !important;
+            box-shadow: none !important;
+            border: none !important;
           }
 
           .report-modal-container {
+            position: static !important;
             max-width: 100% !important;
             width: 100% !important;
             max-height: none !important;
@@ -326,6 +320,8 @@ export default function ReportModal({ guests, config, onClose }) {
           }
 
           #printable-report-area {
+            display: block !important;
+            visibility: visible !important;
             width: 100% !important;
             padding: 0 !important;
             margin: 0 !important;

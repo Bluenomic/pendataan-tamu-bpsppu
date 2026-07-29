@@ -147,7 +147,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       return;
     }
 
-    // Trigger full mirror sync background request
     syncBatchGuestsToGoogleSheets(config.webhookUrl, guests);
 
     setToast({ 
@@ -236,7 +235,8 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         />
       )}
 
-      <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+      {/* Admin Top Header Bar (Has no-print class) */}
+      <header className="no-print" style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           
           <div className="admin-header-responsive">
@@ -354,7 +354,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         )}
       </main>
 
-      <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--bps-card-border)', background: 'var(--bps-card)' }}>
+      <footer className="no-print" style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--bps-card-border)', background: 'var(--bps-card)' }}>
         <div>
           © 2026 <b>BPS Buku Tamu Digital</b> • Portal Admin BPS Kabupaten Penajam Paser Utara
         </div>
