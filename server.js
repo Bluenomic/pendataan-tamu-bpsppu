@@ -69,13 +69,15 @@ app.post('/api/public/register', (req, res) => {
       return res.status(400).json({ success: false, error: 'Nama dan Instansi wajib diisi.' });
     }
 
+    const guestId = guest.id || `BPS-PPU-${Date.now()}`;
+
     const insertStmt = db.prepare(`
       INSERT INTO guests (id, nama, noHp, instansi, nik, tujuan, keperluan, jumlah, tanggal, jamMasuk, jamKeluar, status, catatan, ttd)
       VALUES (@id, @nama, @noHp, @instansi, @nik, @tujuan, @keperluan, @jumlah, @tanggal, @jamMasuk, @jamKeluar, @status, @catatan, @ttd)
     `);
 
     insertStmt.run({
-      id: guest.id || `BPS-PPU-${Date.now()}`,
+      id: guestId,
       nama: guest.nama,
       noHp: guest.noHp || '-',
       instansi: guest.instansi,
@@ -91,7 +93,7 @@ app.post('/api/public/register', (req, res) => {
       ttd: guest.ttd || ''
     });
 
-    res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan.' });
+    res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan ke SQLite DB.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -143,6 +145,7 @@ app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
     const guest = req.body;
+
     const updateStmt = db.prepare(`
       UPDATE guests SET 
         nama = @nama,
@@ -178,7 +181,7 @@ app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
       ttd: guest.ttd || ''
     });
 
-    res.json({ success: true, message: 'Data tamu berhasil diperbarui.' });
+    res.json({ success: true, message: 'Data tamu berhasil diperbarui di SQLite DB.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -188,7 +191,7 @@ app.delete('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM guests WHERE id = ?').run(id);
-    res.json({ success: true, message: 'Data tamu berhasil dihapus.' });
+    res.json({ success: true, message: 'Data tamu berhasil dihapus dari SQLite DB.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -224,7 +227,7 @@ app.post('/api/admin/guests/import', verifyAdminPinMiddleware, (req, res) => {
     });
 
     insertMany(guestList);
-    res.json({ success: true, count: guestList.length, message: 'Impor Excel berhasil.' });
+    res.json({ success: true, count: guestList.length, message: 'Impor Excel ke SQLite DB berhasil.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -241,12 +244,12 @@ app.post('/api/admin/config', verifyAdminPinMiddleware, (req, res) => {
       }
     });
 
-    res.json({ success: true, message: 'Pengaturan & PIN Admin disimpan.' });
+    res.json({ success: true, message: 'Pengaturan & PIN Admin disimpan di SQLite DB.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`[SQLite Server] Running at http://localhost:${PORT}`);
+  console.log(`[SQLite Server] Express Server berjalan pada http://localhost:${PORT}`);
 });

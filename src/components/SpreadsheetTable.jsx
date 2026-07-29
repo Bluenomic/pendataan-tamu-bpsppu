@@ -14,7 +14,9 @@ import {
   FileSpreadsheet,
   CheckSquare,
   Square,
-  FileText
+  FileText,
+  PenTool,
+  X
 } from 'lucide-react';
 import { exportToExcel, importFromExcel } from '../utils/storage';
 import ReportModal from './ReportModal';
@@ -36,6 +38,7 @@ export default function SpreadsheetTable({
   const [selectedIds, setSelectedIds] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [previewTtdGuest, setPreviewTtdGuest] = useState(null);
 
   const filteredGuests = useMemo(() => {
     return guests.filter((g) => {
@@ -92,7 +95,7 @@ export default function SpreadsheetTable({
     } else if (guest.status === 'Sedang Bertemu') {
       nextStatus = 'Selesai';
       const now = new Date();
-      jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
     } else {
       nextStatus = 'Menunggu';
       jamKeluar = '-';
@@ -116,7 +119,7 @@ export default function SpreadsheetTable({
   const handleBatchMarkDone = () => {
     if (selectedIds.length === 0) return;
     const now = new Date();
-    const nowStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    const nowStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
     
     guests.forEach(g => {
       if (selectedIds.includes(g.id)) {
@@ -273,7 +276,7 @@ export default function SpreadsheetTable({
 
       {/* Main Table Grid (no-print) */}
       <div className="table-container glass-panel no-print" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <table className="spreadsheet-table" style={{ minWidth: '950px' }}>
+        <table className="spreadsheet-table" style={{ minWidth: '1000px' }}>
           <thead>
             <tr>
               <th style={{ width: '36px', textAlign: 'center' }}>
@@ -295,15 +298,16 @@ export default function SpreadsheetTable({
               <th style={{ width: '160px' }}>Instansi / Alamat</th>
               <th style={{ width: '150px' }}>Tujuan Unit</th>
               <th>Keperluan</th>
-              <th style={{ width: '90px', textAlign: 'center' }}>Jumlah</th>
-              <th style={{ textAlign: 'center', width: '130px' }}>Status</th>
+              <th style={{ width: '80px', textAlign: 'center' }}>TTD</th>
+              <th style={{ width: '80px', textAlign: 'center' }}>Jumlah</th>
+              <th style={{ textAlign: 'center', width: '120px' }}>Status</th>
               <th style={{ textAlign: 'center', width: '110px' }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredGuests.length === 0 ? (
               <tr>
-                <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan="12" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                   <FileSpreadsheet size={40} style={{ display: 'block', margin: '0 auto 0.75rem', opacity: 0.5 }} />
                   Tidak ada data tamu yang sesuai dengan pencarian / filter.
                 </td>
@@ -311,6 +315,7 @@ export default function SpreadsheetTable({
             ) : (
               filteredGuests.map((g, idx) => {
                 const isSelected = selectedIds.includes(g.id);
+                const hasTtd = Boolean(g.ttd && g.ttd.trim());
                 return (
                   <tr key={g.id} style={{ background: isSelected ? 'rgba(2, 66, 130, 0.12)' : undefined }}>
                     
@@ -348,6 +353,32 @@ export default function SpreadsheetTable({
                     <td style={{ fontSize: '0.825rem' }}>
                       <div>{g.keperluan}</div>
                       {g.catatan && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{g.catatan}"</div>}
+                    </td>
+
+                    {/* Digital Signature Preview Button */}
+                    <td style={{ textAlign: 'center' }}>
+                      {hasTtd ? (
+                        <button 
+                          onClick={() => setPreviewTtdGuest(g)}
+                          title="Lihat Tanda Tangan Digital Tamu"
+                          style={{
+                            background: 'rgba(2, 66, 130, 0.1)',
+                            border: '1px solid var(--bps-navy)',
+                            color: 'var(--bps-navy)',
+                            padding: '0.25rem 0.45rem',
+                            fontSize: '0.75rem',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.2rem'
+                          }}
+                        >
+                          <PenTool size={12} /> TTD
+                        </button>
+                      ) : (
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>-</span>
+                      )}
                     </td>
 
                     <td style={{ textAlign: 'center', fontWeight: '700', fontSize: '0.825rem' }}>{g.jumlah || 1} org</td>
@@ -407,6 +438,37 @@ export default function SpreadsheetTable({
           </tbody>
         </table>
       </div>
+
+      {/* Preview TTD Modal */}
+      {previewTtdGuest && (
+        <div className="modal-overlay" onClick={() => setPreviewTtdGuest(null)}>
+          <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px', textAlign: 'center', padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--bps-card-border)', paddingBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--bps-navy)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <PenTool size={16} /> Tanda Tangan Digital Tamu
+              </span>
+              <button className="btn btn-secondary btn-icon" onClick={() => setPreviewTtdGuest(null)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <div style={{ background: '#ffffff', border: '1.5px dashed var(--bps-navy)', padding: '1rem', margin: '0.5rem 0 1rem' }}>
+              <img 
+                src={previewTtdGuest.ttd} 
+                alt={`TTD ${previewTtdGuest.nama}`} 
+                style={{ width: '100%', maxHeight: '140px', objectFit: 'contain' }} 
+              />
+            </div>
+
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+              {previewTtdGuest.nama}
+            </div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+              {previewTtdGuest.instansi} • {previewTtdGuest.tanggal}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Official Report Modal Dialog */}
       {isReportOpen && (
