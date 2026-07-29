@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import GuestForm from '../components/GuestForm';
 import GuestPassModal from '../components/GuestPassModal';
 import PassSelectorModal from '../components/PassSelectorModal';
-import { saveSingleGuestAsync, syncGuestToGoogleSheets, checkoutGuestAsync } from '../utils/storage';
-import { Clock, MapPin, LogOut, Ticket, CheckCircle2, Eye, Layers } from 'lucide-react';
+import { saveSingleGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
+import { Clock, MapPin, Ticket, Layers } from 'lucide-react';
 
 const LOCAL_STORAGE_PASSES_KEY = 'bps_ppu_guest_passes_v2';
 
@@ -58,7 +58,7 @@ export default function PublicKioskPage({ config }) {
     }
   };
 
-  // Open pass click handler
+  // Open pass click handler (Header Top Button Only)
   const handleOpenMyPasses = () => {
     if (myPasses.length === 0) return;
     if (myPasses.length === 1) {
@@ -74,7 +74,7 @@ export default function PublicKioskPage({ config }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bps-bg)' }}>
       
-      {/* 1. Public Kiosk Top Header */}
+      {/* 1. Public Kiosk Top Header (SINGLE ACCESSIBLE PASS BUTTON AT TOP HEADER!) */}
       <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           
@@ -95,23 +95,23 @@ export default function PublicKioskPage({ config }) {
             </div>
           </div>
 
-          {/* Device Active Passes Quick Button */}
+          {/* Device Active Passes Quick Button - TOP HEADER ONLY */}
           {myPasses.length > 0 && (
             <div>
               <button 
                 onClick={handleOpenMyPasses}
                 style={{
-                  background: 'rgba(255, 255, 255, 0.15)',
+                  background: 'rgba(255, 255, 255, 0.18)',
                   color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.35)',
-                  padding: '0.5rem 0.9rem',
+                  border: '1px solid rgba(255, 255, 255, 0.4)',
+                  padding: '0.55rem 1rem',
                   fontWeight: '800',
-                  fontSize: '0.825rem',
+                  fontSize: '0.85rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.4rem',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                  gap: '0.45rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
                 }}
               >
                 {myPasses.length > 1 ? <Layers size={16} color="#38bdf8" /> : <Ticket size={16} color="#38bdf8" />}
@@ -132,7 +132,7 @@ export default function PublicKioskPage({ config }) {
         </div>
       </header>
 
-      {/* 2. Device Active Pass Banner Notice */}
+      {/* 2. Device Active Pass Information Banner (NO DUPLICATE BUTTONS) */}
       {myPasses.length > 0 && latestPass && (
         <div style={{ 
           background: latestPass.status !== 'Selesai' ? '#0077b6' : '#15803d', 
@@ -141,32 +141,23 @@ export default function PublicKioskPage({ config }) {
           fontSize: '0.85rem', 
           fontWeight: '600' 
         }}>
-          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Ticket size={18} />
-              <div>
-                {myPasses.length > 1 ? (
-                  <>
-                    Tersimpan <b>{myPasses.length} Tiket Pass Kunjungan</b> pada perangkat ini ({activePassesCount} Aktif).
-                  </>
-                ) : latestPass.status !== 'Selesai' ? (
-                  <>
-                    Pass Kunjungan Aktif: <b>{latestPass.nama}</b> ({latestPass.instansi}) • ID: <b>{latestPass.id}</b>
-                  </>
-                ) : (
-                  <>
-                    ✓ Kunjungan Anda (<b>{latestPass.nama}</b>) Telah <b>Selesai</b> pada jam {latestPass.jamKeluar}.
-                  </>
-                )}
-              </div>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Ticket size={18} style={{ flexShrink: 0 }} />
+            <div>
+              {myPasses.length > 1 ? (
+                <>
+                  Tersimpan <b>{myPasses.length} Tiket Pass Kunjungan</b> pada perangkat ini ({activePassesCount} Aktif). Gunakan tombol <b>Pass Saya</b> di navbar atas untuk melihat rincian.
+                </>
+              ) : latestPass.status !== 'Selesai' ? (
+                <>
+                  Pass Kunjungan Aktif: <b>{latestPass.nama}</b> ({latestPass.instansi}) • ID: <b>{latestPass.id}</b> • Masuk: <b>{latestPass.jamMasuk}</b>.
+                </>
+              ) : (
+                <>
+                  ✓ Status Kunjungan Anda (<b>{latestPass.nama}</b>) Telah <b>Selesai</b> pada jam {latestPass.jamKeluar}.
+                </>
+              )}
             </div>
-
-            <button 
-              onClick={handleOpenMyPasses}
-              style={{ background: '#ffffff', color: '#024282', border: 'none', padding: '0.25rem 0.65rem', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-            >
-              <Eye size={13} /> {myPasses.length > 1 ? 'Pilih & Lihat Tiket Pass' : 'Lihat Tiket Pass'}
-            </button>
           </div>
         </div>
       )}
