@@ -53,17 +53,31 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     'Tim Pengolahan & TI'
   ];
 
-  // Signature Canvas Handlers (Touch & Mouse)
+  // Precision Coordinate Calculation (Scaling CSS display vs internal Canvas resolution)
+  const getCanvasCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches && e.touches[0] ? e.touches[0].clientY : e.clientY;
+    
+    // Scale factor to map CSS display width/height to internal canvas width/height
+    const scaleX = canvas.width / (rect.width || 1);
+    const scaleY = canvas.height / (rect.height || 1);
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
+  // Signature Canvas Handlers
   const startDrawing = (e) => {
     setIsDrawing(true);
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const { x, y } = getCanvasCoordinates(e);
     ctx.beginPath();
     ctx.moveTo(x, y);
   };
@@ -73,15 +87,12 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const x = clientX - rect.left;
-    const y = clientY - rect.top;
+    const { x, y } = getCanvasCoordinates(e);
     ctx.lineTo(x, y);
     ctx.strokeStyle = '#024282';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3;
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.stroke();
   };
 
@@ -123,7 +134,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
       ttd: ttdDataUrl
     };
 
-    // Confetti Effect
     try {
       confetti({
         particleCount: 70,
@@ -134,7 +144,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
 
     onAddGuest(newGuest);
 
-    // Reset Form
     setFormData({
       nama: '',
       noHp: '',
@@ -147,7 +156,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
     });
     clearCanvas();
 
-    // Show Pass Ticket Modal
     if (onShowPass) {
       onShowPass(newGuest);
     }
@@ -156,7 +164,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
   return (
     <div style={{ padding: '0 0.75rem 2rem 0.75rem', maxWidth: '1200px', margin: '0 auto' }}>
       
-      {/* Main Responsive Grid Layout */}
       <div className="form-preview-layout">
         
         {/* 1. Form Container */}
@@ -175,7 +182,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
           <form onSubmit={handleSubmit}>
             <div className="responsive-form-grid">
               
-              {/* Nama Lengkap */}
               <div className="form-group full-width-field">
                 <label className="form-label">
                   <User size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -191,7 +197,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* No HP */}
               <div className="form-group">
                 <label className="form-label">
                   <Phone size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -206,7 +211,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* NIK / Identitas */}
               <div className="form-group">
                 <label className="form-label">
                   <CreditCard size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -221,7 +225,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* Instansi / Alamat */}
               <div className="form-group full-width-field">
                 <label className="form-label">
                   <Building size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -237,7 +240,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* Pegawai / Unit Dituju */}
               <div className="form-group full-width-field-mobile">
                 <label className="form-label">
                   <Target size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -254,7 +256,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 </select>
               </div>
 
-              {/* Keperluan */}
               <div className="form-group full-width-field-mobile">
                 <label className="form-label">
                   <FileText size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -271,7 +272,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 </select>
               </div>
 
-              {/* Jumlah Rombongan */}
               <div className="form-group full-width-field-mobile">
                 <label className="form-label">
                   <Users size={14} style={{ display: 'inline', marginRight: '4px' }} />
@@ -287,7 +287,6 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* Catatan / Detail Keperluan */}
               <div className="form-group full-width-field">
                 <label className="form-label">Catatan Tambahan / Detail Kunjungan</label>
                 <input 
@@ -299,7 +298,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* Digital Signature Pad - Touch Friendly */}
+              {/* Digital Signature Pad - Extra Large Spacious Canvas */}
               <div className="form-group full-width-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                   <label className="form-label" style={{ margin: 0 }}>
@@ -315,12 +314,12 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                     <RotateCcw size={12} /> Hapus TTD
                   </button>
                 </div>
-                <div style={{ border: '1.5px dashed var(--bps-cyan)', borderRadius: '8px', background: 'var(--bps-card)', overflow: 'hidden', touchAction: 'none' }}>
+                <div style={{ border: '1.5px dashed var(--bps-navy)', borderRadius: '0px', background: '#ffffff', overflow: 'hidden', touchAction: 'none' }}>
                   <canvas 
                     ref={canvasRef}
-                    width={500}
-                    height={100}
-                    style={{ width: '100%', height: '100px', cursor: 'crosshair', touchAction: 'none' }}
+                    width={700}
+                    height={220}
+                    style={{ width: '100%', height: '175px', cursor: 'crosshair', touchAction: 'none', display: 'block' }}
                     onMouseDown={startDrawing}
                     onMouseMove={draw}
                     onMouseUp={stopDrawing}
@@ -368,7 +367,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </p>
             </div>
 
-            <div style={{ background: 'var(--bps-bg)', padding: '0.85rem', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.8rem', border: '1px solid var(--bps-card-border)' }}>
+            <div style={{ background: 'var(--bps-bg)', padding: '0.85rem', borderRadius: '0px', display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.8rem', border: '1px solid var(--bps-card-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                 <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Tujuan Unit:</span>
                 <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{formData.tujuan}</span>
@@ -389,7 +388,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
               </div>
             </div>
 
-            <div style={{ marginTop: '1rem', padding: '0.65rem', background: 'rgba(0, 153, 219, 0.08)', border: '1px solid rgba(0, 153, 219, 0.2)', borderRadius: '8px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
+            <div style={{ marginTop: '1rem', padding: '0.65rem', background: 'rgba(0, 153, 219, 0.08)', border: '1px solid rgba(0, 153, 219, 0.2)', borderRadius: '0px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
               📌 Data tamu akan otomatis disimpan ke sistem & disinkronkan ke Google Sheets.
             </div>
 
