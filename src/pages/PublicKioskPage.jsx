@@ -1,37 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import GuestForm from '../components/GuestForm';
 import GuestPassModal from '../components/GuestPassModal';
+import PassSelectorModal from '../components/PassSelectorModal';
 import { saveSingleGuestAsync, syncGuestToGoogleSheets, checkoutGuestAsync } from '../utils/storage';
-import { Clock, MapPin, LogOut, Ticket, CheckCircle2, Sparkles, Eye } from 'lucide-react';
+import { Clock, MapPin, LogOut, Ticket, CheckCircle2, Eye, Layers } from 'lucide-react';
 
-const LOCAL_STORAGE_PASS_KEY = 'bps_ppu_guest_active_pass_v1';
+const LOCAL_STORAGE_PASSES_KEY = 'bps_ppu_guest_passes_v2';
 
 export default function PublicKioskPage({ config }) {
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
-  const [activeMyPass, setActiveMyPass] = useState(null);
-  const [checkoutMsg, setCheckoutMsg] = useState('');
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [myPasses, setMyPasses] = useState([]);
+  const [isPassSelectorOpen, setIsPassSelectorOpen] = useState(false);
+  const [showBanner] = useState(true);
 
-  // Load active pass from local storage on mount
+  // Load active passes from local storage on mount
   useEffect(() => {
     try {
-      const savedPass = localStorage.getItem(LOCAL_STORAGE_PASS_KEY);
-      if (savedPass) {
-        const parsed = JSON.parse(savedPass);
-        setActiveMyPass(parsed);
+      const savedPasses = localStorage.getItem(LOCAL_STORAGE_PASSES_KEY);
+      if (savedPasses) {
+        const parsed = JSON.parse(savedPasses);
+        if (Array.isArray(parsed)) {
+          setMyPasses(parsed);
+        }
       }
     } catch (e) {
-      console.error('Failed to load active pass from localStorage:', e);
+      console.error('Failed to load passes from localStorage:', e);
     }
   }, []);
 
-  // Save pass to local storage helper
-  const saveMyPassToLocalStorage = (guestPass) => {
+  // Save or update pass in local storage array
+  const saveOrUpdatePassInLocalStorage = (guestPass) => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_PASS_KEY, JSON.stringify(guestPass));
-      setActiveMyPass(guestPass);
+      const existing = [...myPasses];
+      const idx = existing.findIndex(p => p.id === guestPass.id);
+      if (idx >= 0) {
+        existing[idx] = guestPass;
+      } else {
+        existing.unshift(guestPass); // Insert new pass at the front
+      }
+      localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(existing));
+      setMyPasses(existing);
     } catch (e) {
-      console.error('Failed to save active pass to localStorage:', e);
+      console.error('Failed to save pass to localStorage:', e);
     }
   };
 
@@ -39,8 +49,8 @@ export default function PublicKioskPage({ config }) {
     // 1. Save to SQLite via public API
     await saveSingleGuestAsync(newGuest);
 
-    // 2. Save active pass to device local storage
-    saveMyPassToLocalStorage(newGuest);
+    // 2. Save/Update pass to device local storage array
+    saveOrUpdatePassInLocalStorage(newGuest);
 
     // 3. Sync to Google Sheets if configured
     if (config.webhookUrl) {
@@ -48,33 +58,18 @@ export default function PublicKioskPage({ config }) {
     }
   };
 
-  // Device Self Check-Out for own pass stored in localStorage
-  const handleDeviceSelfCheckout = async () => {
-    if (!activeMyPass || activeMyPass.status === 'Selesai') return;
-
-    setIsCheckingOut(true);
-    const res = await checkoutGuestAsync(activeMyPass.id);
-    setIsCheckingOut(false);
-
-    if (res && res.success) {
-      const updatedPass = {
-        ...activeMyPass,
-        status: 'Selesai',
-        jamKeluar: res.jamKeluar || new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WITA'
-      };
-
-      saveMyPassToLocalStorage(updatedPass);
-      setCheckoutMsg(`Terima kasih ${updatedPass.nama}! Kunjungan Anda telah ditandai Selesai pada ${updatedPass.jamKeluar}.`);
-
-      if (config.webhookUrl) {
-        syncGuestToGoogleSheets(config.webhookUrl, updatedPass);
-      }
+  // Open pass click handler
+  const handleOpenMyPasses = () => {
+    if (myPasses.length === 0) return;
+    if (myPasses.length === 1) {
+      setSelectedPassGuest(myPasses[0]);
     } else {
-      alert('Gagal melakukan check-out. Silakan coba lagi.');
+      setIsPassSelectorOpen(true);
     }
   };
 
-  const isMyPassActive = activeMyPass && activeMyPass.status !== 'Selesai';
+  const latestPass = myPasses[0];
+  const activePassesCount = myPasses.filter(p => p.status !== 'Selesai').length;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bps-bg)' }}>
@@ -100,59 +95,47 @@ export default function PublicKioskPage({ config }) {
             </div>
           </div>
 
-          {/* Device Active Pass Quick Action (If pass exists in localStorage) */}
-          {activeMyPass && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          {/* Device Active Passes Quick Button */}
+          {myPasses.length > 0 && (
+            <div>
               <button 
-                onClick={() => setSelectedPassGuest(activeMyPass)}
+                onClick={handleOpenMyPasses}
                 style={{
                   background: 'rgba(255, 255, 255, 0.15)',
                   color: '#ffffff',
-                  border: '1px solid rgba(255, 255, 255, 0.3)',
-                  padding: '0.45rem 0.85rem',
-                  fontWeight: '700',
-                  fontSize: '0.8rem',
+                  border: '1px solid rgba(255, 255, 255, 0.35)',
+                  padding: '0.5rem 0.9rem',
+                  fontWeight: '800',
+                  fontSize: '0.825rem',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.35rem'
+                  gap: '0.4rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
                 }}
               >
-                <Ticket size={15} color="#38bdf8" /> Pass Saya ({activeMyPass.nama})
+                {myPasses.length > 1 ? <Layers size={16} color="#38bdf8" /> : <Ticket size={16} color="#38bdf8" />}
+                <span>
+                  {myPasses.length === 1 
+                    ? `Pass Saya (${myPasses[0].nama})` 
+                    : `Pass Saya (${myPasses.length} Tiket Pass)`}
+                </span>
+                {activePassesCount > 0 && (
+                  <span style={{ background: '#16a34a', color: '#fff', fontSize: '0.65rem', padding: '0.1rem 0.4rem', fontWeight: '800' }}>
+                    {activePassesCount} Aktif
+                  </span>
+                )}
               </button>
-
-              {isMyPassActive && (
-                <button 
-                  onClick={handleDeviceSelfCheckout}
-                  disabled={isCheckingOut}
-                  style={{
-                    background: '#16a34a',
-                    color: '#ffffff',
-                    border: 'none',
-                    padding: '0.45rem 0.85rem',
-                    fontWeight: '800',
-                    fontSize: '0.8rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.35rem',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
-                  }}
-                  title="Check-out mandiri untuk pass kunjungan Anda"
-                >
-                  <LogOut size={15} /> Check-Out Saya
-                </button>
-              )}
             </div>
           )}
 
         </div>
       </header>
 
-      {/* 2. Device Active Pass Banner Notice (Stored in LocalStorage) */}
-      {activeMyPass && (
+      {/* 2. Device Active Pass Banner Notice */}
+      {myPasses.length > 0 && latestPass && (
         <div style={{ 
-          background: isMyPassActive ? '#0077b6' : '#15803d', 
+          background: latestPass.status !== 'Selesai' ? '#0077b6' : '#15803d', 
           color: '#ffffff', 
           padding: '0.65rem 1.5rem', 
           fontSize: '0.85rem', 
@@ -162,55 +145,49 @@ export default function PublicKioskPage({ config }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Ticket size={18} />
               <div>
-                {isMyPassActive ? (
+                {myPasses.length > 1 ? (
                   <>
-                    Pass Kunjungan Aktif: <b>{activeMyPass.nama}</b> ({activeMyPass.instansi}) • ID: <b>{activeMyPass.id}</b> • Masuk: <b>{activeMyPass.jamMasuk}</b>
+                    Tersimpan <b>{myPasses.length} Tiket Pass Kunjungan</b> pada perangkat ini ({activePassesCount} Aktif).
+                  </>
+                ) : latestPass.status !== 'Selesai' ? (
+                  <>
+                    Pass Kunjungan Aktif: <b>{latestPass.nama}</b> ({latestPass.instansi}) • ID: <b>{latestPass.id}</b>
                   </>
                 ) : (
                   <>
-                    ✓ Status Kunjungan Anda (<b>{activeMyPass.nama}</b>) Telah <b>Selesai</b> pada jam {activeMyPass.jamKeluar}. Terima kasih!
+                    ✓ Kunjungan Anda (<b>{latestPass.nama}</b>) Telah <b>Selesai</b> pada jam {latestPass.jamKeluar}.
                   </>
                 )}
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button 
-                onClick={() => setSelectedPassGuest(activeMyPass)}
-                style={{ background: '#ffffff', color: '#024282', border: 'none', padding: '0.25rem 0.6rem', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-              >
-                <Eye size={13} /> Lihat Tiket Pass
-              </button>
-
-              {isMyPassActive && (
-                <button 
-                  onClick={handleDeviceSelfCheckout}
-                  disabled={isCheckingOut}
-                  style={{ background: '#16a34a', color: '#ffffff', border: 'none', padding: '0.25rem 0.6rem', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
-                >
-                  <LogOut size={13} /> Check-Out Mandiri
-                </button>
-              )}
-            </div>
+            <button 
+              onClick={handleOpenMyPasses}
+              style={{ background: '#ffffff', color: '#024282', border: 'none', padding: '0.25rem 0.65rem', fontSize: '0.75rem', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+            >
+              <Eye size={13} /> {myPasses.length > 1 ? 'Pilih & Lihat Tiket Pass' : 'Lihat Tiket Pass'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* 3. Official Operating Hours Banner (#0099db) */}
-      <div style={{ background: '#0099db', color: '#ffffff', padding: '0.55rem 1.5rem', fontSize: '0.8rem', fontWeight: '500' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
-            <Clock size={15} style={{ flexShrink: 0 }} />
-            <div>
-              <b>Pelayanan Statistik Terpadu (PST)</b>: Senin–Kamis 07.30–16.00 WITA & Jumat 07.30–16.30 WITA.
-              <span style={{ marginLeft: '0.5rem', opacity: 0.9 }}>
-                <MapPin size={12} style={{ display: 'inline', marginRight: '2px' }} />
-                Alamat: Jl. Provinsi Km.09 Nipah-Nipah, Penajam
-              </span>
+      {/* 3. Official Operating Hours Banner */}
+      {showBanner && (
+        <div style={{ background: '#0099db', color: '#ffffff', padding: '0.55rem 1.5rem', fontSize: '0.8rem', fontWeight: '500' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flex: 1 }}>
+              <Clock size={15} style={{ flexShrink: 0 }} />
+              <div>
+                <b>Pelayanan Statistik Terpadu (PST)</b>: Senin–Kamis 07.30–16.00 WITA & Jumat 07.30–16.30 WITA.
+                <span style={{ marginLeft: '0.5rem', opacity: 0.9 }}>
+                  <MapPin size={12} style={{ display: 'inline', marginRight: '2px' }} />
+                  Alamat: Jl. Provinsi Km.09 Nipah-Nipah, Penajam
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 4. Main Guest Registration Form */}
       <main style={{ flex: 1, paddingTop: '1.5rem' }}>
@@ -238,14 +215,25 @@ export default function PublicKioskPage({ config }) {
         </div>
       </footer>
 
-      {/* Guest Pass Ticket Modal */}
+      {/* Single Guest Pass Ticket Modal */}
       {selectedPassGuest && (
         <GuestPassModal 
           guest={selectedPassGuest}
           config={config}
           officeName={config.officeName}
           onClose={() => setSelectedPassGuest(null)}
-          onUpdateLocalPass={saveMyPassToLocalStorage}
+          onUpdateLocalPass={saveOrUpdatePassInLocalStorage}
+        />
+      )}
+
+      {/* Multiple Passes Selector Modal */}
+      {isPassSelectorOpen && (
+        <PassSelectorModal 
+          passes={myPasses}
+          config={config}
+          onSelectPass={(passItem) => setSelectedPassGuest(passItem)}
+          onUpdatePass={saveOrUpdatePassInLocalStorage}
+          onClose={() => setIsPassSelectorOpen(false)}
         />
       )}
 
