@@ -10,6 +10,7 @@ import {
   saveSingleGuestAsync, 
   updateSingleGuestAsync, 
   deleteSingleGuestAsync, 
+  deleteGuestFromGoogleSheets,
   importGuestsAsync, 
   saveAppConfigAsync, 
   syncBatchGuestsToGoogleSheets 
@@ -36,16 +37,14 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const [pinInput, setPinInput] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  const [activeTab, setActiveTab] = useState('table'); // 'table' | 'analytics'
+  const [activeTab, setActiveTab] = useState('table');
   const [guests, setGuests] = useState([]);
   
-  // Modals & Toast notification
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
-  // Check login on submit
   const handleAdminLogin = async (e) => {
     e.preventDefault();
     if (!pinInput.trim()) {
@@ -66,7 +65,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         setCurrentAdminPin(pin);
         setLoginError('');
 
-        // Fetch protected guest data using PIN header
         const fetchedGuests = await getGuestDataAsync(pin);
         setGuests(fetchedGuests);
         return;
@@ -79,7 +77,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setPinInput('');
   };
 
-  // Lock / Logout Admin
   const handleLogout = () => {
     setIsAdminUnlocked(false);
     setCurrentAdminPin('');
@@ -88,7 +85,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setLoginError('');
   };
 
-  // Save Settings & PIN Admin to SQLite Database
   const handleSaveConfigAdmin = async (newConfig) => {
     await saveAppConfigAsync(newConfig, currentAdminPin);
     
@@ -100,27 +96,26 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setToast({ message: 'Pengaturan & PIN Admin berhasil disimpan ke database!', type: 'success' });
   };
 
-  // Update Single Guest
   const handleUpdateGuest = async (updatedGuest) => {
     setGuests(prev => prev.map(g => g.id === updatedGuest.id ? updatedGuest : g));
     await updateSingleGuestAsync(updatedGuest, currentAdminPin);
   };
 
-  // Delete Guest
   const handleDeleteGuest = async (id) => {
     setGuests(prev => prev.filter(g => g.id !== id));
     await deleteSingleGuestAsync(id, currentAdminPin);
+    if (config.webhookUrl) {
+      deleteGuestFromGoogleSheets(config.webhookUrl, id);
+    }
     setToast({ message: 'Data tamu berhasil dihapus.', type: 'success' });
   };
 
-  // Import Guests from Excel
   const handleImportGuests = async (importedList) => {
     setGuests(prev => [...importedList, ...prev]);
     await importGuestsAsync(importedList, currentAdminPin);
     setToast({ message: `Berhasil mengimpor ${importedList.length} data dari Excel!`, type: 'success' });
   };
 
-  // Add Manual Guest
   const handleAddNewManual = async () => {
     const now = new Date();
     const manualGuest = {
@@ -145,7 +140,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setEditingGuest(manualGuest);
   };
 
-  // Sync to Google Sheets (Non-blocking Background Sync - Clean Toast)
   const handleSyncGoogleSheets = () => {
     if (!config.webhookUrl) {
       setToast({ message: 'URL Webhook Google Sheets belum diisi! Silakan atur di Pengaturan.', type: 'error' });
@@ -153,26 +147,17 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       return;
     }
 
-    if (guests.length === 0) {
-      setToast({ message: 'Tabel saat ini kosong, tidak ada data untuk disinkronkan.', type: 'error' });
-      return;
-    }
-
-    // Trigger background sync without blocking UI
+    // Trigger full mirror sync background request
     syncBatchGuestsToGoogleSheets(config.webhookUrl, guests);
 
-    // Show sleek pop-up notification
     setToast({ 
-      message: `Data tamu (${guests.length} baris) berhasil disinkronkan ke Google Sheets!`, 
+      message: `Google Sheets disinkronkan 100% dengan Admin Panel!`, 
       type: 'success' 
     });
   };
 
   const isSheetsConnected = Boolean(config?.webhookUrl);
 
-  /* --------------------------------------------------------------------------
-     A. LOGIN SCREEN (If not authenticated)
-     -------------------------------------------------------------------------- */
   if (!isAdminUnlocked) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bps-bg)', padding: '1rem' }}>
@@ -240,13 +225,9 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     );
   }
 
-  /* --------------------------------------------------------------------------
-     B. ADMIN DASHBOARD PORTAL (Once Authenticated - Fully Responsive)
-     -------------------------------------------------------------------------- */
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'var(--bps-bg)' }}>
       
-      {/* Toast Notification Pop-up */}
       {toast && (
         <ToastNotification 
           message={toast.message}
@@ -255,13 +236,11 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         />
       )}
 
-      {/* Admin Top Header Bar - Responsive Container */}
       <header style={{ background: '#024282', color: '#ffffff', padding: '0.85rem 1rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           
           <div className="admin-header-responsive">
             
-            {/* Logo & Title Section */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
               <img src="/logo-bps.png" alt="Logo BPS" style={{ height: '34px', objectFit: 'contain' }} />
               <div>
@@ -279,7 +258,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
               </div>
             </div>
 
-            {/* Navigation Tabs */}
             <nav className="admin-nav-tabs">
               <button 
                 className={`bps-tab-btn ${activeTab === 'table' ? 'active' : ''}`}
@@ -298,10 +276,8 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
               </button>
             </nav>
 
-            {/* Right Action Icons & Controls */}
             <div className="admin-controls-flex">
               
-              {/* Google Sheets Status */}
               <button 
                 onClick={() => setIsConfigModalOpen(true)}
                 className="btn-admin-header-action"
@@ -320,7 +296,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
                 )}
               </button>
 
-              {/* Settings */}
               <button 
                 onClick={() => setIsConfigModalOpen(true)}
                 className="btn-admin-icon"
@@ -329,7 +304,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
                 <Settings size={17} />
               </button>
 
-              {/* Theme Toggle */}
               <button 
                 onClick={toggleTheme}
                 className="btn-admin-icon"
@@ -338,7 +312,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
                 {theme === 'dark' ? <Sun size={17} color="#fbbf24" /> : <Moon size={17} color="#38bdf8" />}
               </button>
 
-              {/* Switch to Kiosk View */}
               <a 
                 href="/" 
                 className="btn btn-secondary btn-sm btn-kiosk-responsive"
@@ -347,7 +320,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
                 <ArrowLeft size={14} /> Kios
               </a>
 
-              {/* Logout Admin Button */}
               <button 
                 onClick={handleLogout}
                 className="btn btn-danger btn-sm"
@@ -362,7 +334,6 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         </div>
       </header>
 
-      {/* Main Admin Content */}
       <main style={{ flex: 1, paddingTop: '1rem', paddingBottom: '2rem' }}>
         {activeTab === 'table' && (
           <SpreadsheetTable 
@@ -383,14 +354,12 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         )}
       </main>
 
-      {/* Footer */}
       <footer style={{ textAlign: 'center', padding: '1rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid var(--bps-card-border)', background: 'var(--bps-card)' }}>
         <div>
           © 2026 <b>BPS Buku Tamu Digital</b> • Portal Admin BPS Kabupaten Penajam Paser Utara
         </div>
       </footer>
 
-      {/* Modals */}
       {isConfigModalOpen && (
         <GoogleSheetsModal 
           config={config}

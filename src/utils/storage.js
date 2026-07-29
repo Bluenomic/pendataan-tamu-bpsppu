@@ -196,17 +196,63 @@ export const importFromExcel = (file) => {
   });
 };
 
+// Sync Single Guest (Add or Update)
 export const syncGuestToGoogleSheets = async (webhookUrl, guest) => {
-  return syncBatchGuestsToGoogleSheets(webhookUrl, [guest]);
+  if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
+  try {
+    await fetch(webhookUrl.trim(), {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        id: guest.id || '-',
+        nama: guest.nama || '-',
+        noHp: guest.noHp || '-',
+        instansi: guest.instansi || '-',
+        nik: guest.nik || '-',
+        tujuan: guest.tujuan || '-',
+        keperluan: guest.keperluan || '-',
+        jumlah: String(guest.jumlah || 1),
+        tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
+        jamMasuk: guest.jamMasuk || '-',
+        jamKeluar: guest.jamKeluar || '-',
+        status: guest.status || 'Menunggu',
+        catatan: guest.catatan || '-'
+      })
+    });
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 };
 
+// Delete Guest from Google Sheets
+export const deleteGuestFromGoogleSheets = async (webhookUrl, guestId) => {
+  if (!webhookUrl || !webhookUrl.trim() || !guestId) return { success: false };
+  try {
+    await fetch(webhookUrl.trim(), {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'delete',
+        id: guestId
+      })
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Delete Sheets Error:', error);
+    return { success: false, message: error.message };
+  }
+};
+
+// Master Mirror Sync (Clears deleted rows on Sheets so Google Sheets matches Admin Panel 100%)
 export const syncBatchGuestsToGoogleSheets = async (webhookUrl, guestList) => {
   if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
-  if (!guestList || guestList.length === 0) return { success: true, count: 0 };
 
   const cleanUrl = webhookUrl.trim();
 
-  const cleanBatchPayload = guestList.map(guest => ({
+  const cleanBatchPayload = (guestList || []).map(guest => ({
     id: guest.id || '-',
     nama: guest.nama || '-',
     noHp: guest.noHp || '-',
@@ -229,10 +275,13 @@ export const syncBatchGuestsToGoogleSheets = async (webhookUrl, guestList) => {
       headers: {
         'Content-Type': 'text/plain;charset=utf-8',
       },
-      body: JSON.stringify(cleanBatchPayload)
+      body: JSON.stringify({
+        action: 'sync_all',
+        guests: cleanBatchPayload
+      })
     });
 
-    return { success: true, count: guestList.length, message: 'Batch sync kilat berhasil' };
+    return { success: true, count: cleanBatchPayload.length, message: 'Full Mirror Sync berhasil' };
   } catch (error) {
     console.error('Batch Sync Error:', error);
     return { success: false, message: error.message };
