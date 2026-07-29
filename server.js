@@ -62,6 +62,7 @@ function verifyAdminPinMiddleware(req, res, next) {
   next();
 }
 
+// PUBLIC API: Register Guest
 app.post('/api/public/register', (req, res) => {
   try {
     const guest = req.body;
@@ -99,6 +100,43 @@ app.post('/api/public/register', (req, res) => {
   }
 });
 
+// PUBLIC API: Guest Self Check-Out
+app.post('/api/public/checkout', (req, res) => {
+  try {
+    const { id } = req.body;
+    if (!id) return res.status(400).json({ success: false, error: 'ID Tamu wajib diisi.' });
+
+    const now = new Date();
+    const jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
+
+    const updateStmt = db.prepare(`
+      UPDATE guests SET status = 'Selesai', jamKeluar = ? WHERE id = ?
+    `);
+    const result = updateStmt.run(jamKeluar, id);
+
+    if (result.changes > 0) {
+      const guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
+      res.json({ success: true, message: 'Check-out tamu berhasil.', guest, jamKeluar });
+    } else {
+      res.status(404).json({ success: false, error: 'Data tamu tidak ditemukan.' });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUBLIC API: Get Active Guests for Today's Self Check-Out
+app.get('/api/public/active-guests', (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const guests = db.prepare("SELECT id, nama, instansi, jamMasuk, status FROM guests WHERE status != 'Selesai' AND tanggal = ? ORDER BY jamMasuk DESC").all(today);
+    res.json({ success: true, data: guests });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUBLIC API: Fetch Config
 app.get('/api/public/config', (req, res) => {
   try {
     const rows = db.prepare('SELECT * FROM config').all();
@@ -118,6 +156,7 @@ app.get('/api/public/config', (req, res) => {
   }
 });
 
+// ADMIN API: Login
 app.post('/api/admin/login', (req, res) => {
   try {
     const { pin } = req.body;
@@ -132,6 +171,7 @@ app.post('/api/admin/login', (req, res) => {
   }
 });
 
+// ADMIN API: Get All Guests
 app.get('/api/admin/guests', verifyAdminPinMiddleware, (req, res) => {
   try {
     const guests = db.prepare('SELECT * FROM guests ORDER BY tanggal DESC, jamMasuk DESC').all();
@@ -141,6 +181,7 @@ app.get('/api/admin/guests', verifyAdminPinMiddleware, (req, res) => {
   }
 });
 
+// ADMIN API: Update Single Guest
 app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
@@ -187,6 +228,7 @@ app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   }
 });
 
+// ADMIN API: Delete Guest
 app.delete('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
@@ -197,6 +239,7 @@ app.delete('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   }
 });
 
+// ADMIN API: Import Guests
 app.post('/api/admin/guests/import', verifyAdminPinMiddleware, (req, res) => {
   try {
     const guestList = req.body;
@@ -233,6 +276,7 @@ app.post('/api/admin/guests/import', verifyAdminPinMiddleware, (req, res) => {
   }
 });
 
+// ADMIN API: Save Config
 app.post('/api/admin/config', verifyAdminPinMiddleware, (req, res) => {
   try {
     const newConfig = req.body;

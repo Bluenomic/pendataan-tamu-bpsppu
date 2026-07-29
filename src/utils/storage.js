@@ -14,6 +14,39 @@ export const saveSingleGuestAsync = async (guest) => {
   }
 };
 
+// PUBLIC API: Guest Self Check-Out
+export const checkoutGuestAsync = async (guestId) => {
+  try {
+    const response = await fetch('/api/public/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: guestId })
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    console.error('[Public API] Failed to checkout guest:', e);
+  }
+  return { success: false };
+};
+
+// PUBLIC API: Get Active Guests for Today's Self Check-Out
+export const getActiveGuestsAsync = async () => {
+  try {
+    const response = await fetch('/api/public/active-guests');
+    if (response.ok) {
+      const resData = await response.json();
+      if (resData.success && resData.data) {
+        return resData.data;
+      }
+    }
+  } catch (e) {
+    console.error('[Public API] Failed to fetch active guests:', e);
+  }
+  return [];
+};
+
 export const getGuestDataAsync = async (adminPin) => {
   if (!adminPin) return [];
 
@@ -196,7 +229,6 @@ export const importFromExcel = (file) => {
   });
 };
 
-// Sync Single Guest (Add or Update)
 export const syncGuestToGoogleSheets = async (webhookUrl, guest) => {
   if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
   try {
@@ -226,7 +258,6 @@ export const syncGuestToGoogleSheets = async (webhookUrl, guest) => {
   }
 };
 
-// Delete Guest from Google Sheets
 export const deleteGuestFromGoogleSheets = async (webhookUrl, guestId) => {
   if (!webhookUrl || !webhookUrl.trim() || !guestId) return { success: false };
   try {
@@ -246,7 +277,6 @@ export const deleteGuestFromGoogleSheets = async (webhookUrl, guestId) => {
   }
 };
 
-// Master Mirror Sync (Clears deleted rows on Sheets so Google Sheets matches Admin Panel 100%)
 export const syncBatchGuestsToGoogleSheets = async (webhookUrl, guestList) => {
   if (!webhookUrl || !webhookUrl.trim()) return { success: false, message: 'URL Webhook belum diisi' };
 

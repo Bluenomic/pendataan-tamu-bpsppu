@@ -12,11 +12,12 @@ import {
   PenTool, 
   RotateCcw,
   Sparkles,
-  QrCode
+  QrCode,
+  LogOut
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export default function GuestForm({ onAddGuest, onShowPass }) {
+export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
   const [formData, setFormData] = useState({
     nama: '',
     noHp: '',
@@ -169,14 +170,27 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
         {/* 1. Form Container */}
         <div className="glass-panel form-card-padding">
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.85rem' }}>
-            <div style={{ background: '#024282', padding: '0.5rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Sparkles size={20} color="#fff" />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.85rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ background: '#024282', padding: '0.5rem', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Sparkles size={20} color="#fff" />
+              </div>
+              <div>
+                <h2 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Formulir Registrasi Kunjungan</h2>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Silakan isi data tamu untuk mencetak Pass Kunjungan PST</p>
+              </div>
             </div>
-            <div>
-              <h2 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Formulir Registrasi Kunjungan</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>Silakan isi data tamu untuk mencetak Pass Kunjungan PST</p>
-            </div>
+
+            {onOpenCheckout && (
+              <button 
+                type="button" 
+                className="btn btn-success btn-sm"
+                onClick={onOpenCheckout}
+                style={{ fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+              >
+                <LogOut size={14} /> Check-Out Tamu
+              </button>
+            )}
           </div>
 
           <form onSubmit={handleSubmit}>
@@ -298,7 +312,7 @@ export default function GuestForm({ onAddGuest, onShowPass }) {
                 />
               </div>
 
-              {/* Digital Signature Pad - Extra Large Spacious Canvas */}
+              {/* Digital Signature Pad */}
               <div className="form-group full-width-field">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                   <label className="form-label" style={{ margin: 0 }}>
