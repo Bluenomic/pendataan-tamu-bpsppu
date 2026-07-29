@@ -7,6 +7,7 @@ import {
   Building2, 
   FileText 
 } from 'lucide-react';
+import InteractiveCalendarView from './InteractiveCalendarView';
 
 export default function AnalyticsView({ guests }) {
   // Metrics Computation
@@ -64,10 +65,10 @@ export default function AnalyticsView({ guests }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         
         {/* Total Tamu Card */}
-        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
+        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Total Seluruh Tamu</span>
-            <div style={{ background: '#024282', padding: '0.45rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
+            <div style={{ background: '#024282', padding: '0.45rem', borderRadius: '0px', display: 'flex', alignItems: 'center' }}>
               <Users size={18} color="#fff" />
             </div>
           </div>
@@ -80,10 +81,10 @@ export default function AnalyticsView({ guests }) {
         </div>
 
         {/* Tamu Hari Ini Card */}
-        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
+        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Kunjungan Hari Ini</span>
-            <div style={{ background: '#0099db', padding: '0.45rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
+            <div style={{ background: '#0077b6', padding: '0.45rem', borderRadius: '0px', display: 'flex', alignItems: 'center' }}>
               <Calendar size={18} color="#fff" />
             </div>
           </div>
@@ -96,10 +97,10 @@ export default function AnalyticsView({ guests }) {
         </div>
 
         {/* Sedang Bertemu Card */}
-        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1.5px solid var(--bps-card-border)' }}>
+        <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Sedang Bertemu / Aktif</span>
-            <div style={{ background: '#16a34a', padding: '0.45rem', borderRadius: '8px', display: 'flex', alignItems: 'center' }}>
+            <div style={{ background: '#15803d', padding: '0.45rem', borderRadius: '0px', display: 'flex', alignItems: 'center' }}>
               <Clock size={18} color="#fff" />
             </div>
           </div>
@@ -114,11 +115,11 @@ export default function AnalyticsView({ guests }) {
       </div>
 
       {/* Analytics Breakdown Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
         
         {/* Top Keperluan Breakdown */}
         <div className="glass-panel" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1.5px solid var(--bps-card-border)', paddingBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--bps-card-border)', paddingBottom: '0.75rem' }}>
             <FileText size={20} color="var(--bps-navy)" />
             <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Statistik Kategori Keperluan</h3>
           </div>
@@ -132,13 +133,12 @@ export default function AnalyticsView({ guests }) {
                     <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{keperluan}</span>
                     <span style={{ color: 'var(--bps-cyan)', fontWeight: '800' }}>{count} ({percentage}%)</span>
                   </div>
-                  <div style={{ width: '100%', height: '8px', background: 'var(--bps-bg)', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--bps-card-border)' }}>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--bps-bg)', border: '1px solid var(--bps-card-border)' }}>
                     <div 
                       style={{ 
                         width: `${percentage}%`, 
                         height: '100%', 
-                        background: '#0099db',
-                        borderRadius: '4px',
+                        background: '#024282',
                         transition: 'width 0.5s ease-out'
                       }} 
                     />
@@ -166,7 +166,6 @@ export default function AnalyticsView({ guests }) {
                   justifyContent: 'space-between',
                   padding: '0.75rem 1rem',
                   background: 'var(--bps-bg)',
-                  borderRadius: '8px',
                   border: '1px solid var(--bps-card-border)'
                 }}
               >
@@ -174,7 +173,6 @@ export default function AnalyticsView({ guests }) {
                   <span style={{ 
                     width: '24px', 
                     height: '24px', 
-                    borderRadius: '50%', 
                     background: '#024282', 
                     color: '#ffffff',
                     display: 'flex',
@@ -196,6 +194,9 @@ export default function AnalyticsView({ guests }) {
         </div>
 
       </div>
+
+      {/* 3. INTERACTIVE CALENDAR VIEW */}
+      <InteractiveCalendarView guests={guests} />
 
     </div>
   );
