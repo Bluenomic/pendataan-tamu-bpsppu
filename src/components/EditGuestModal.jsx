@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Save, Edit3 } from 'lucide-react';
+import { X, Save, Edit3, Calendar } from 'lucide-react';
 
 export default function EditGuestModal({ guest, onSave, onClose }) {
   const [formData, setFormData] = useState({ ...guest });
@@ -14,9 +14,9 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()}>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--bg-card-border)', paddingBottom: '0.85rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--bps-card-border)', paddingBottom: '0.85rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ background: 'var(--accent-gradient)', padding: '0.4rem', borderRadius: '8px' }}>
+            <div style={{ background: '#024282', padding: '0.4rem', borderRadius: '0px' }}>
               <Edit3 size={18} color="#fff" />
             </div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: '800', margin: 0 }}>Edit Data Kunjungan Tamu</h3>
@@ -58,9 +58,9 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
                 onChange={(e) => {
                   const status = e.target.value;
                   let jamKeluar = formData.jamKeluar;
-                  if (status === 'Selesai' && jamKeluar === '-') {
+                  if (status === 'Selesai' && (jamKeluar === '-' || !jamKeluar)) {
                     const now = new Date();
-                    jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+                    jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
                   }
                   setFormData({ ...formData, status, jamKeluar });
                 }}
@@ -69,6 +69,31 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
                 <option value="Sedang Bertemu">Sedang Bertemu</option>
                 <option value="Selesai">Selesai</option>
               </select>
+            </div>
+
+            {/* Tanggal Kunjungan Field */}
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Calendar size={14} /> Tanggal Kunjungan
+              </label>
+              <input 
+                type="date" 
+                className="form-input"
+                value={formData.tanggal || new Date().toISOString().split('T')[0]}
+                onChange={(e) => setFormData({ ...formData, tanggal: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Jumlah Rombongan (Orang)</label>
+              <input 
+                type="number"
+                min="1" 
+                className="form-input"
+                value={formData.jumlah || 1}
+                onChange={(e) => setFormData({ ...formData, jumlah: parseInt(e.target.value, 10) || 1 })}
+              />
             </div>
 
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -82,8 +107,8 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Unit Dituju</label>
+            <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <label className="form-label">Unit / Pegawai Dituju</label>
               <input 
                 type="text" 
                 className="form-input"
@@ -92,19 +117,8 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Jumlah Rombongan</label>
-              <input 
-                type="number"
-                min="1" 
-                className="form-input"
-                value={formData.jumlah || 1}
-                onChange={(e) => setFormData({ ...formData, jumlah: parseInt(e.target.value, 10) || 1 })}
-              />
-            </div>
-
             <div className="form-group" style={{ gridColumn: 'span 2' }}>
-              <label className="form-label">Keperluan</label>
+              <label className="form-label">Kategori Keperluan</label>
               <input 
                 type="text" 
                 className="form-input"
