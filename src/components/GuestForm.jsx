@@ -402,11 +402,6 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
                 </span>
               </div>
             </div>
-
-            <div style={{ marginTop: '1rem', padding: '0.65rem', background: 'rgba(0, 153, 219, 0.08)', border: '1px solid rgba(0, 153, 219, 0.2)', borderRadius: '0px', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: '600' }}>
-              📌 Data tamu akan otomatis disimpan ke sistem & disinkronkan ke Google Sheets.
-            </div>
-
           </div>
         </div>
 
