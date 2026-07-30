@@ -5,6 +5,7 @@ import GoogleSheetsModal from '../components/GoogleSheetsModal';
 import GuestPassModal from '../components/GuestPassModal';
 import EditGuestModal from '../components/EditGuestModal';
 import ToastNotification from '../components/ToastNotification';
+import QuickCheckoutQrModal from '../components/QuickCheckoutQrModal';
 import { 
   getGuestDataAsync, 
   saveSingleGuestAsync, 
@@ -31,7 +32,8 @@ import {
   ArrowLeft,
   Sun,
   Moon,
-  ExternalLink
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
 
 const SESSION_KEY = 'bps_ppu_admin_session_v1';
@@ -48,6 +50,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
 
   // Restore active session token from localStorage on mount (Time-Limited Session)
@@ -388,6 +391,16 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
               </button>
 
               <button 
+                onClick={() => setIsQrModalOpen(true)}
+                className="btn-admin-header-action"
+                style={{ background: 'rgba(56, 189, 248, 0.2)', border: '1px solid rgba(56, 189, 248, 0.4)', color: '#ffffff' }}
+                title="Cetak Poster QR Code Quick Check-Out Statis"
+              >
+                <QrCode size={15} color="#38bdf8" />
+                <span className="hide-on-mobile" style={{ fontWeight: '800' }}>Cetak QR Check-Out</span>
+              </button>
+
+              <button 
                 onClick={() => setIsConfigModalOpen(true)}
                 className="btn-admin-header-action"
                 title="Pengaturan Google Sheets Sync"
@@ -494,6 +507,12 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
           onClose={() => setEditingGuest(null)}
         />
       )}
+
+      <QuickCheckoutQrModal 
+        isOpen={isQrModalOpen}
+        config={config}
+        onClose={() => setIsQrModalOpen(false)}
+      />
 
     </div>
   );

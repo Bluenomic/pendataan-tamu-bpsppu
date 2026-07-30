@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import GuestForm from '../components/GuestForm';
 import GuestPassModal from '../components/GuestPassModal';
 import PassSelectorModal from '../components/PassSelectorModal';
-import { saveSingleGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync } from '../utils/storage';
-import { Clock, MapPin, Ticket, Layers } from 'lucide-react';
+import QuickCheckoutQrModal from '../components/QuickCheckoutQrModal';
+import QuickCheckoutSuccessModal from '../components/QuickCheckoutSuccessModal';
+import { saveSingleGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync, checkoutGuestAsync } from '../utils/storage';
+import { Clock, MapPin, Ticket, Layers, QrCode } from 'lucide-react';
 
 const LOCAL_STORAGE_PASSES_KEY = 'bps_ppu_guest_passes_v2';
 
@@ -11,7 +13,77 @@ export default function PublicKioskPage({ config }) {
   const [selectedPassGuest, setSelectedPassGuest] = useState(null);
   const [myPasses, setMyPasses] = useState([]);
   const [isPassSelectorOpen, setIsPassSelectorOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [quickCheckoutResult, setQuickCheckoutResult] = useState({ isOpen: false, count: 0, passes: [] });
   const [showBanner] = useState(true);
+
+  // Quick Checkout URL Scanner Trigger (?action=quick-checkout)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'quick-checkout') {
+      const cleanUrl = window.location.origin + window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      executeQuickCheckoutOnDevice();
+    }
+  }, []);
+
+  const executeQuickCheckoutOnDevice = async () => {
+    try {
+      const savedPassesStr = localStorage.getItem(LOCAL_STORAGE_PASSES_KEY);
+      if (!savedPassesStr) {
+        setQuickCheckoutResult({ isOpen: true, count: 0, passes: [] });
+        return;
+      }
+
+      const parsedPasses = JSON.parse(savedPassesStr);
+      if (!Array.isArray(parsedPasses) || parsedPasses.length === 0) {
+        setQuickCheckoutResult({ isOpen: true, count: 0, passes: [] });
+        return;
+      }
+
+      const activePasses = parsedPasses.filter(p => p.status !== 'Selesai');
+      if (activePasses.length === 0) {
+        setQuickCheckoutResult({ isOpen: true, count: 0, passes: [] });
+        return;
+      }
+
+      const now = new Date();
+      const jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
+
+      const updatedPassesList = [];
+
+      for (const passItem of activePasses) {
+        const res = await checkoutGuestAsync(passItem.id);
+        const checkoutTime = (res && res.success && res.jamKeluar) ? res.jamKeluar : jamKeluar;
+        const updated = {
+          ...passItem,
+          status: 'Selesai',
+          jamKeluar: checkoutTime
+        };
+        updatedPassesList.push(updated);
+
+        if (config && config.webhookUrl) {
+          syncGuestToGoogleSheets(config.webhookUrl, updated);
+        }
+      }
+
+      const newPasses = parsedPasses.map(p => {
+        const found = updatedPassesList.find(u => u.id === p.id);
+        return found || p;
+      });
+
+      localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(newPasses));
+      setMyPasses(newPasses);
+
+      setQuickCheckoutResult({
+        isOpen: true,
+        count: updatedPassesList.length,
+        passes: updatedPassesList
+      });
+    } catch (e) {
+      console.error('Quick checkout execution failed:', e);
+    }
+  };
 
   // Load active passes from local storage on mount (Auto-prune older than 24 hours)
   useEffect(() => {
@@ -315,6 +387,22 @@ export default function PublicKioskPage({ config }) {
           onClose={() => setIsPassSelectorOpen(false)}
         />
       )}
+
+      {/* Quick Checkout QR Poster Modal */}
+      <QuickCheckoutQrModal 
+        isOpen={isQrModalOpen}
+        config={config}
+        onClose={() => setIsQrModalOpen(false)}
+      />
+
+      {/* Quick Checkout Success Celebration Modal */}
+      <QuickCheckoutSuccessModal 
+        isOpen={quickCheckoutResult.isOpen}
+        checkedOutCount={quickCheckoutResult.count}
+        checkedOutPasses={quickCheckoutResult.passes}
+        officeName={config?.officeName}
+        onClose={() => setQuickCheckoutResult({ isOpen: false, count: 0, passes: [] })}
+      />
 
     </div>
   );
