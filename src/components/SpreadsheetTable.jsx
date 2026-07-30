@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { exportToExcel, importFromExcel } from '../utils/storage';
 import ReportModal from './ReportModal';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function SpreadsheetTable({ 
   guests, 
@@ -42,6 +43,7 @@ export default function SpreadsheetTable({
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [previewTtdGuest, setPreviewTtdGuest] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const activeTodayCount = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -118,10 +120,18 @@ export default function SpreadsheetTable({
 
   const handleBatchDelete = () => {
     if (selectedIds.length === 0) return;
-    if (confirm(`Yakin ingin menghapus ${selectedIds.length} data tamu terpilih?`)) {
+    setDeleteTarget({ type: 'batch', count: selectedIds.length });
+  };
+
+  const handleConfirmDeleteModal = () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.type === 'single' && deleteTarget.guest) {
+      onDeleteGuest(deleteTarget.guest.id);
+    } else if (deleteTarget.type === 'batch') {
       selectedIds.forEach(id => onDeleteGuest(id));
       setSelectedIds([]);
     }
+    setDeleteTarget(null);
   };
 
   const handleBatchMarkDone = () => {
@@ -444,12 +454,8 @@ export default function SpreadsheetTable({
                         </button>
                         <button 
                           className="btn btn-danger btn-icon btn-sm"
-                          onClick={() => {
-                            if (confirm(`Hapus data kunjungan ${g.nama}?`)) {
-                              onDeleteGuest(g.id);
-                            }
-                          }}
-                          title="Hapus Data"
+                          onClick={() => setDeleteTarget({ type: 'single', guest: g })}
+                          title="Hapus Data Tamu"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -503,6 +509,27 @@ export default function SpreadsheetTable({
           onClose={() => setIsReportOpen(false)}
         />
       )}
+
+      {/* Custom Confirm Delete Modal */}
+      <ConfirmDeleteModal 
+        isOpen={Boolean(deleteTarget)}
+        title={deleteTarget?.type === 'batch' ? 'Konfirmasi Hapus Massal' : 'Hapus Data Tamu'}
+        message={
+          deleteTarget?.type === 'batch' 
+            ? `Apakah Anda yakin ingin menghapus ${deleteTarget?.count || 0} data tamu terpilih secara permanen?`
+            : 'Apakah Anda yakin ingin menghapus data kunjungan tamu ini secara permanen dari database?'
+        }
+        itemName={
+          deleteTarget?.type === 'single' && deleteTarget.guest
+            ? `${deleteTarget.guest.nama} (${deleteTarget.guest.instansi}) - ID: ${deleteTarget.guest.id}`
+            : deleteTarget?.type === 'batch'
+            ? `${deleteTarget.count} data tamu terpilih`
+            : ''
+        }
+        onConfirm={handleConfirmDeleteModal}
+        onClose={() => setDeleteTarget(null)}
+        confirmText={deleteTarget?.type === 'batch' ? `Hapus ${deleteTarget?.count || 0} Data` : 'Ya, Hapus Data'}
+      />
 
     </div>
   );

@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Ticket, Eye, LogOut, CheckCircle2, Clock, Building, Trash2 } from 'lucide-react';
 import { checkoutGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function PassSelectorModal({ passes, config, onSelectPass, onUpdatePass, onDeleteLocalPass, onClose }) {
+  const [passToDelete, setPassToDelete] = useState(null);
+
   const handleCheckOutSingle = async (passItem, e) => {
     e.stopPropagation();
     if (passItem.status === 'Selesai') return;
@@ -25,13 +28,11 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
     }
   };
 
-  const handleDeleteSingle = (passItem, e) => {
-    e.stopPropagation();
-    if (window.confirm(`Hapus pass kunjungan (${passItem.nama}) dari perangkat ini?`)) {
-      if (onDeleteLocalPass) {
-        onDeleteLocalPass(passItem.id);
-      }
+  const handleConfirmDeleteSingle = () => {
+    if (passToDelete && onDeleteLocalPass) {
+      onDeleteLocalPass(passToDelete.id);
     }
+    setPassToDelete(null);
   };
 
   return (
@@ -123,7 +124,10 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
 
                   <button 
                     className="btn btn-secondary btn-sm"
-                    onClick={(e) => handleDeleteSingle(passItem, e)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPassToDelete(passItem);
+                    }}
                     style={{ padding: '0.35rem 0.5rem', color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2' }}
                     title="Hapus Pass dari Perangkat"
                   >
@@ -142,6 +146,17 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
         </div>
 
       </div>
+
+      <ConfirmDeleteModal 
+        isOpen={Boolean(passToDelete)}
+        title="Hapus Pass Kunjungan"
+        message="Apakah Anda yakin ingin menghapus pass kunjungan ini dari perangkat Anda?"
+        itemName={passToDelete ? `${passToDelete.nama} - ID: ${passToDelete.id}` : ''}
+        onConfirm={handleConfirmDeleteSingle}
+        onClose={() => setPassToDelete(null)}
+        confirmText="Ya, Hapus Pass"
+      />
+
     </div>
   );
 }

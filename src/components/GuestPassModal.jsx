@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { X, Printer, Clock, QrCode, CheckCircle, MapPin, LogOut, Sparkles, Trash2 } from 'lucide-react';
 import { checkoutGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
+import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function GuestPassModal({ guest, officeName, onClose, config, onUpdateLocalPass, onDeleteLocalPass }) {
   const [currentGuest, setCurrentGuest] = useState(guest);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState('');
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   if (!currentGuest) return null;
 
@@ -13,13 +15,11 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
     window.print();
   };
 
-  const handleDeletePass = () => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus tiket pass ini (${currentGuest.nama}) dari perangkat Anda?`)) {
-      if (onDeleteLocalPass) {
-        onDeleteLocalPass(currentGuest.id);
-      }
-      onClose();
+  const handleConfirmDeletePass = () => {
+    if (onDeleteLocalPass) {
+      onDeleteLocalPass(currentGuest.id);
     }
+    onClose();
   };
 
   const handleSelfCheckout = async () => {
@@ -177,7 +177,7 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button 
               className="btn btn-secondary" 
-              onClick={handleDeletePass}
+              onClick={() => setIsDeleteConfirmOpen(true)}
               title="Hapus Tiket Pass dari Perangkat Ini"
               style={{ color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2', fontWeight: '700' }}
             >
@@ -192,6 +192,17 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
         </div>
 
       </div>
+
+      <ConfirmDeleteModal 
+        isOpen={isDeleteConfirmOpen}
+        title="Hapus Pass Kunjungan"
+        message="Apakah Anda yakin ingin menghapus kartu pass kunjungan ini dari perangkat Anda?"
+        itemName={`${currentGuest.nama} - ID: ${currentGuest.id}`}
+        onConfirm={handleConfirmDeletePass}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        confirmText="Ya, Hapus Pass"
+      />
+
     </div>
   );
 }
