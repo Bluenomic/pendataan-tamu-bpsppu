@@ -32,6 +32,8 @@ import {
   Moon
 } from 'lucide-react';
 
+const SESSION_KEY = 'bps_ppu_admin_session_v1';
+
 export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
   const [currentAdminPin, setCurrentAdminPin] = useState('');
@@ -45,6 +47,29 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // Restore active session token from localStorage on mount (Time-Limited Session)
+  useEffect(() => {
+    try {
+      const savedSession = localStorage.getItem(SESSION_KEY);
+      if (savedSession) {
+        const parsed = JSON.parse(savedSession);
+        if (parsed && parsed.token && parsed.expiresAt && Date.now() < parsed.expiresAt) {
+          const authKey = parsed.token || parsed.pin;
+          setIsAdminUnlocked(true);
+          setCurrentAdminPin(authKey);
+          
+          getGuestDataAsync(authKey).then(data => {
+            if (Array.isArray(data)) setGuests(data);
+          });
+        } else {
+          localStorage.removeItem(SESSION_KEY);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to restore admin session:', e);
+    }
+  }, []);
 
   // Real-time Auto-Polling: Refresh guest data every 3 seconds when Admin Panel is open
   useEffect(() => {
@@ -80,16 +105,25 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       const response = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pin: pinInput })
+        body: JSON.stringify({ pin: pinInput.trim() })
       });
 
       if (response.ok) {
-        const pin = pinInput.trim();
+        const resData = await response.json();
+        const authKey = resData.token || pinInput.trim();
+        const expiresAt = resData.expiresAt || (Date.now() + 2 * 60 * 60 * 1000);
+
         setIsAdminUnlocked(true);
-        setCurrentAdminPin(pin);
+        setCurrentAdminPin(authKey);
         setLoginError('');
 
-        const fetchedGuests = await getGuestDataAsync(pin);
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+          token: authKey,
+          expiresAt,
+          pin: pinInput.trim()
+        }));
+
+        const fetchedGuests = await getGuestDataAsync(authKey);
         setGuests(fetchedGuests);
         return;
       }
@@ -102,6 +136,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   };
 
   const handleLogout = () => {
+    localStorage.removeItem(SESSION_KEY);
     setIsAdminUnlocked(false);
     setCurrentAdminPin('');
     setGuests([]);

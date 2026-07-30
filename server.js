@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import Database from 'better-sqlite3';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -73,17 +74,44 @@ async function syncToGoogleSheetsServer(payload) {
   }
 }
 
+// In-Memory Token Store for Admin Sessions (default 2 hours duration)
+const activeAdminTokens = new Map();
+const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Jam
+
 function verifyAdminPinMiddleware(req, res, next) {
-  const inputPin = req.headers['x-admin-pin'];
+  const inputHeader = req.headers['x-admin-pin'] || req.headers['x-admin-token'];
   const actualPin = getAdminPinFromDb();
 
-  if (!inputPin || inputPin !== actualPin) {
+  if (!inputHeader) {
     return res.status(403).json({ 
       success: false, 
-      error: 'Akses Ditolak (403 Forbidden): PIN Admin tidak valid.' 
+      error: 'Akses Ditolak (403 Forbidden): Token / PIN Admin tidak ditemukan.' 
     });
   }
-  next();
+
+  // Check direct PIN match
+  if (inputHeader === actualPin) {
+    return next();
+  }
+
+  // Check Token match
+  if (activeAdminTokens.has(inputHeader)) {
+    const tokenInfo = activeAdminTokens.get(inputHeader);
+    if (Date.now() < tokenInfo.expiresAt) {
+      return next();
+    } else {
+      activeAdminTokens.delete(inputHeader);
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Sesi Admin Telah Kedaluwarsa. Silakan Login Ulang.' 
+      });
+    }
+  }
+
+  return res.status(403).json({ 
+    success: false, 
+    error: 'Akses Ditolak (403 Forbidden): Token / PIN Admin tidak valid.' 
+  });
 }
 
 // PUBLIC API: Register Guest
@@ -203,13 +231,23 @@ app.get('/api/public/config', (req, res) => {
   }
 });
 
-// ADMIN API: Login
+// ADMIN API: Login with Time-Limited Session Token
 app.post('/api/admin/login', (req, res) => {
   try {
     const { pin } = req.body;
     const actualPin = getAdminPinFromDb();
     if (pin === actualPin) {
-      return res.json({ success: true, message: 'Autentikasi PIN Admin Berhasil.' });
+      const token = `admin_token_${crypto.randomBytes(16).toString('hex')}`;
+      const expiresAt = Date.now() + SESSION_DURATION_MS;
+      activeAdminTokens.set(token, { expiresAt, pin });
+
+      return res.json({ 
+        success: true, 
+        message: 'Autentikasi PIN Admin Berhasil.',
+        token,
+        expiresAt,
+        expiresInMs: SESSION_DURATION_MS
+      });
     } else {
       return res.status(401).json({ success: false, error: 'PIN Admin Salah.' });
     }
