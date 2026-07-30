@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SpreadsheetTable from '../components/SpreadsheetTable';
 import AnalyticsView from '../components/AnalyticsView';
 import GoogleSheetsModal from '../components/GoogleSheetsModal';
@@ -44,6 +44,29 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const [editingGuest, setEditingGuest] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [toast, setToast] = useState(null);
+
+  // Real-time Auto-Polling: Refresh guest data every 3 seconds when Admin Panel is open
+  useEffect(() => {
+    if (!isAdminUnlocked || !currentAdminPin) return;
+
+    let isMounted = true;
+    const fetchLatestGuests = async () => {
+      try {
+        const latestData = await getGuestDataAsync(currentAdminPin);
+        if (isMounted && Array.isArray(latestData)) {
+          setGuests(latestData);
+        }
+      } catch (err) {
+        console.error('Failed to auto-refresh guest data:', err);
+      }
+    };
+
+    const intervalId = setInterval(fetchLatestGuests, 3000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [isAdminUnlocked, currentAdminPin]);
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
