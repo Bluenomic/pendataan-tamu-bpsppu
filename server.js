@@ -5,6 +5,8 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 
+import fs from 'fs';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -14,7 +16,13 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-const dbPath = path.join(__dirname, 'buku_tamu.db');
+// Support Railway Volume / Cloud Persistent Storage (process.env.DATA_DIR)
+const dataDir = process.env.DATA_DIR || __dirname;
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+const dbPath = path.join(dataDir, 'buku_tamu.db');
+console.log(`[SQLite Server] Database Path: ${dbPath}`);
 const db = new Database(dbPath);
 
 db.exec(`
