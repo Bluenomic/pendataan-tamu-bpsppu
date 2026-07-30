@@ -125,7 +125,7 @@ function verifyAdminPinMiddleware(req, res, next) {
   }
 
   // Check direct PIN match
-  if (inputHeader === actualPin) {
+  if (String(inputHeader).trim() === String(actualPin).trim()) {
     return next();
   }
 
@@ -287,7 +287,7 @@ app.post('/api/admin/login', (req, res) => {
   try {
     const { pin } = req.body;
     const actualPin = getAdminPinFromDb();
-    if (pin === actualPin) {
+    if (pin && String(pin).trim() === String(actualPin).trim()) {
       const token = `admin_token_${crypto.randomBytes(16).toString('hex')}`;
       const expiresAt = Date.now() + SESSION_DURATION_MS;
       activeAdminTokens.set(token, { expiresAt, pin });
@@ -529,4 +529,5 @@ app.get('*', (req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`[SQLite Server] Express Server berjalan pada http://localhost:${PORT}`);
+  console.log(`[SQLite Server] Active Admin PIN: "${getAdminPinFromDb()}"`);
 });
