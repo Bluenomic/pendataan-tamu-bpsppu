@@ -518,6 +518,15 @@ app.post('/api/admin/config', verifyAdminPinMiddleware, (req, res) => {
   }
 });
 
+// Serve Vite frontend static assets in production
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Fallback non-API routes to index.html for Client-Side Routing
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.listen(PORT, () => {
   console.log(`[SQLite Server] Express Server berjalan pada http://localhost:${PORT}`);
 });
