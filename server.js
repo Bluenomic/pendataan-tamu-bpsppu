@@ -49,6 +49,30 @@ function getAdminPinFromDb() {
   }
 }
 
+function getWebhookUrlFromDb() {
+  try {
+    const row = db.prepare("SELECT value FROM config WHERE key = 'webhookUrl'").get();
+    return row && row.value ? row.value : '';
+  } catch (e) {
+    return '';
+  }
+}
+
+async function syncToGoogleSheetsServer(payload) {
+  try {
+    const webhookUrl = getWebhookUrlFromDb();
+    if (!webhookUrl || !webhookUrl.trim()) return;
+
+    fetch(webhookUrl.trim(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload)
+    }).catch(err => console.error('[Server Google Sheets Sync Error]:', err.message));
+  } catch (e) {
+    console.error('[Server Google Sheets Sync Exception]:', e.message);
+  }
+}
+
 function verifyAdminPinMiddleware(req, res, next) {
   const inputPin = req.headers['x-admin-pin'];
   const actualPin = getAdminPinFromDb();
@@ -71,13 +95,7 @@ app.post('/api/public/register', (req, res) => {
     }
 
     const guestId = guest.id || `BPS-PPU-${Date.now()}`;
-
-    const insertStmt = db.prepare(`
-      INSERT INTO guests (id, nama, noHp, instansi, nik, tujuan, keperluan, jumlah, tanggal, jamMasuk, jamKeluar, status, catatan, ttd)
-      VALUES (@id, @nama, @noHp, @instansi, @nik, @tujuan, @keperluan, @jumlah, @tanggal, @jamMasuk, @jamKeluar, @status, @catatan, @ttd)
-    `);
-
-    insertStmt.run({
+    const guestData = {
       id: guestId,
       nama: guest.nama,
       noHp: guest.noHp || '-',
@@ -92,7 +110,17 @@ app.post('/api/public/register', (req, res) => {
       status: 'Menunggu',
       catatan: guest.catatan || '',
       ttd: guest.ttd || ''
-    });
+    };
+
+    const insertStmt = db.prepare(`
+      INSERT INTO guests (id, nama, noHp, instansi, nik, tujuan, keperluan, jumlah, tanggal, jamMasuk, jamKeluar, status, catatan, ttd)
+      VALUES (@id, @nama, @noHp, @instansi, @nik, @tujuan, @keperluan, @jumlah, @tanggal, @jamMasuk, @jamKeluar, @status, @catatan, @ttd)
+    `);
+
+    insertStmt.run(guestData);
+
+    // Live Sync to Google Sheets automatically from server!
+    syncToGoogleSheetsServer({ ...guestData, jumlah: String(guestData.jumlah) });
 
     res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan ke SQLite DB.' });
   } catch (error) {
@@ -117,6 +145,25 @@ app.post('/api/public/checkout', (req, res) => {
     if (result.changes > 0) {
       const guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(id);
       res.json({ success: true, message: 'Check-out tamu berhasil.', guest, jamKeluar });
+      
+      // Live Sync update to Google Sheets automatically from server!
+      if (guest) {
+        syncToGoogleSheetsServer({
+          id: guest.id,
+          nama: guest.nama,
+          noHp: guest.noHp,
+          instansi: guest.instansi,
+          nik: guest.nik,
+          tujuan: guest.tujuan,
+          keperluan: guest.keperluan,
+          jumlah: String(guest.jumlah),
+          tanggal: guest.tanggal,
+          jamMasuk: guest.jamMasuk,
+          jamKeluar: guest.jamKeluar,
+          status: guest.status,
+          catatan: guest.catatan
+        });
+      }
     } else {
       res.status(404).json({ success: false, error: 'Data tamu tidak ditemukan.' });
     }
@@ -222,6 +269,22 @@ app.put('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
       ttd: guest.ttd || ''
     });
 
+    syncToGoogleSheetsServer({
+      id,
+      nama: guest.nama,
+      noHp: guest.noHp,
+      instansi: guest.instansi,
+      nik: guest.nik,
+      tujuan: guest.tujuan,
+      keperluan: guest.keperluan,
+      jumlah: String(guest.jumlah || 1),
+      tanggal: guest.tanggal,
+      jamMasuk: guest.jamMasuk,
+      jamKeluar: guest.jamKeluar,
+      status: guest.status,
+      catatan: guest.catatan
+    });
+
     res.json({ success: true, message: 'Data tamu berhasil diperbarui di SQLite DB.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -233,6 +296,12 @@ app.delete('/api/admin/guests/:id', verifyAdminPinMiddleware, (req, res) => {
   try {
     const { id } = req.params;
     db.prepare('DELETE FROM guests WHERE id = ?').run(id);
+
+    syncToGoogleSheetsServer({
+      action: 'delete',
+      id
+    });
+
     res.json({ success: true, message: 'Data tamu berhasil dihapus dari SQLite DB.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
@@ -270,6 +339,28 @@ app.post('/api/admin/guests/import', verifyAdminPinMiddleware, (req, res) => {
     });
 
     insertMany(guestList);
+
+    const cleanBatchPayload = guestList.map(guest => ({
+      id: guest.id || '-',
+      nama: guest.nama || '-',
+      noHp: guest.noHp || '-',
+      instansi: guest.instansi || '-',
+      nik: guest.nik || '-',
+      tujuan: guest.tujuan || '-',
+      keperluan: guest.keperluan || '-',
+      jumlah: String(guest.jumlah || 1),
+      tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
+      jamMasuk: guest.jamMasuk || '-',
+      jamKeluar: guest.jamKeluar || '-',
+      status: guest.status || 'Selesai',
+      catatan: guest.catatan || '-'
+    }));
+
+    syncToGoogleSheetsServer({
+      action: 'sync_all',
+      guests: cleanBatchPayload
+    });
+
     res.json({ success: true, count: guestList.length, message: 'Impor Excel ke SQLite DB berhasil.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

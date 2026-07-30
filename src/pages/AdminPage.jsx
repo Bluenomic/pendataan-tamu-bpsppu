@@ -11,6 +11,7 @@ import {
   updateSingleGuestAsync, 
   deleteSingleGuestAsync, 
   deleteGuestFromGoogleSheets,
+  syncGuestToGoogleSheets,
   importGuestsAsync, 
   saveAppConfigAsync, 
   syncBatchGuestsToGoogleSheets 
@@ -122,6 +123,9 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const handleUpdateGuest = async (updatedGuest) => {
     setGuests(prev => prev.map(g => g.id === updatedGuest.id ? updatedGuest : g));
     await updateSingleGuestAsync(updatedGuest, currentAdminPin);
+    if (config.webhookUrl) {
+      syncGuestToGoogleSheets(config.webhookUrl, updatedGuest);
+    }
   };
 
   const handleDeleteGuest = async (id) => {
@@ -136,6 +140,9 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   const handleImportGuests = async (importedList) => {
     setGuests(prev => [...importedList, ...prev]);
     await importGuestsAsync(importedList, currentAdminPin);
+    if (config.webhookUrl) {
+      syncBatchGuestsToGoogleSheets(config.webhookUrl, importedList);
+    }
     setToast({ message: `Berhasil mengimpor ${importedList.length} data dari Excel!`, type: 'success' });
   };
 
@@ -160,6 +167,9 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     
     setGuests(prev => [manualGuest, ...prev]);
     await saveSingleGuestAsync(manualGuest);
+    if (config.webhookUrl) {
+      syncGuestToGoogleSheets(config.webhookUrl, manualGuest);
+    }
     setEditingGuest(manualGuest);
   };
 
