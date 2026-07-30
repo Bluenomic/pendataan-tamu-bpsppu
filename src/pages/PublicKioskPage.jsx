@@ -64,6 +64,19 @@ export default function PublicKioskPage({ config }) {
     }
   };
 
+  const handleDeletePassInLocalStorage = (guestId) => {
+    try {
+      const updatedPasses = myPasses.filter(p => p.id !== guestId);
+      localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(updatedPasses));
+      setMyPasses(updatedPasses);
+      if (selectedPassGuest && selectedPassGuest.id === guestId) {
+        setSelectedPassGuest(null);
+      }
+    } catch (e) {
+      console.error('Failed to delete pass from localStorage:', e);
+    }
+  };
+
   const handleAddGuest = async (newGuest) => {
     // 1. Save to SQLite via public API
     await saveSingleGuestAsync(newGuest);
@@ -233,6 +246,7 @@ export default function PublicKioskPage({ config }) {
           officeName={config.officeName}
           onClose={() => setSelectedPassGuest(null)}
           onUpdateLocalPass={saveOrUpdatePassInLocalStorage}
+          onDeleteLocalPass={handleDeletePassInLocalStorage}
         />
       )}
 
@@ -243,6 +257,7 @@ export default function PublicKioskPage({ config }) {
           config={config}
           onSelectPass={(passItem) => setSelectedPassGuest(passItem)}
           onUpdatePass={saveOrUpdatePassInLocalStorage}
+          onDeleteLocalPass={handleDeletePassInLocalStorage}
           onClose={() => setIsPassSelectorOpen(false)}
         />
       )}

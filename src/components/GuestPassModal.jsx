@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { X, Printer, Clock, QrCode, CheckCircle, MapPin, LogOut, Sparkles } from 'lucide-react';
+import { X, Printer, Clock, QrCode, CheckCircle, MapPin, LogOut, Sparkles, Trash2 } from 'lucide-react';
 import { checkoutGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
 
-export default function GuestPassModal({ guest, officeName, onClose, config, onUpdateLocalPass }) {
+export default function GuestPassModal({ guest, officeName, onClose, config, onUpdateLocalPass, onDeleteLocalPass }) {
   const [currentGuest, setCurrentGuest] = useState(guest);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState('');
@@ -11,6 +11,15 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDeletePass = () => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus tiket pass ini (${currentGuest.nama}) dari perangkat Anda?`)) {
+      if (onDeleteLocalPass) {
+        onDeleteLocalPass(currentGuest.id);
+      }
+      onClose();
+    }
   };
 
   const handleSelfCheckout = async () => {
@@ -166,6 +175,14 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
           )}
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={handleDeletePass}
+              title="Hapus Tiket Pass dari Perangkat Ini"
+              style={{ color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2', fontWeight: '700' }}
+            >
+              <Trash2 size={15} /> Hapus Pass
+            </button>
             <button className="btn btn-secondary" onClick={onClose}>Tutup</button>
             <button className="btn btn-primary" onClick={handlePrint}>
               <Printer size={16} /> Cetak Pass

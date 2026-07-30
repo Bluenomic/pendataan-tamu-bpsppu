@@ -1,8 +1,8 @@
 import React from 'react';
-import { X, Ticket, Eye, LogOut, CheckCircle2, Clock, Building } from 'lucide-react';
+import { X, Ticket, Eye, LogOut, CheckCircle2, Clock, Building, Trash2 } from 'lucide-react';
 import { checkoutGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
 
-export default function PassSelectorModal({ passes, config, onSelectPass, onUpdatePass, onClose }) {
+export default function PassSelectorModal({ passes, config, onSelectPass, onUpdatePass, onDeleteLocalPass, onClose }) {
   const handleCheckOutSingle = async (passItem, e) => {
     e.stopPropagation();
     if (passItem.status === 'Selesai') return;
@@ -25,6 +25,15 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
     }
   };
 
+  const handleDeleteSingle = (passItem, e) => {
+    e.stopPropagation();
+    if (window.confirm(`Hapus pass kunjungan (${passItem.nama}) dari perangkat ini?`)) {
+      if (onDeleteLocalPass) {
+        onDeleteLocalPass(passItem.id);
+      }
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose} style={{ zIndex: 9999 }}>
       <div className="modal-content glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px', padding: '1.5rem' }}>
@@ -40,7 +49,7 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
                 Daftar Tiket Pass Saya ({passes.length})
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                Pilih tiket pass untuk melihat rincian atau melakukan check-out
+                Pilih tiket pass untuk melihat rincian, check-out, atau menghapus dari perangkat
               </p>
             </div>
           </div>
@@ -95,7 +104,7 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
                     }}
                     style={{ fontWeight: '800', padding: '0.35rem 0.6rem', fontSize: '0.75rem' }}
                   >
-                    <Eye size={13} /> Lihat Pass
+                    <Eye size={13} /> Lihat
                   </button>
 
                   {!isCompleted ? (
@@ -111,6 +120,15 @@ export default function PassSelectorModal({ passes, config, onSelectPass, onUpda
                       <CheckCircle2 size={13} /> Selesai
                     </span>
                   )}
+
+                  <button 
+                    className="btn btn-secondary btn-sm"
+                    onClick={(e) => handleDeleteSingle(passItem, e)}
+                    style={{ padding: '0.35rem 0.5rem', color: '#dc2626', borderColor: '#fca5a5', background: '#fef2f2' }}
+                    title="Hapus Pass dari Perangkat"
+                  >
+                    <Trash2 size={13} />
+                  </button>
                 </div>
 
               </div>
