@@ -97,17 +97,15 @@ export default function SpreadsheetTable({
   };
 
   const cycleStatus = (guest) => {
-    let nextStatus = 'Menunggu';
+    let nextStatus = 'Proses';
     let jamKeluar = guest.jamKeluar;
 
-    if (guest.status === 'Menunggu') {
-      nextStatus = 'Sedang Bertemu';
-    } else if (guest.status === 'Sedang Bertemu') {
+    if (guest.status === 'Proses' || guest.status === 'Menunggu' || guest.status === 'Sedang Bertemu') {
       nextStatus = 'Selesai';
       const now = new Date();
       jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
     } else {
-      nextStatus = 'Menunggu';
+      nextStatus = 'Proses';
       jamKeluar = '-';
     }
 
@@ -268,8 +266,7 @@ export default function SpreadsheetTable({
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
                 <option value="ALL">Semua Status</option>
-                <option value="Menunggu">Menunggu</option>
-                <option value="Sedang Bertemu">Sedang Bertemu</option>
+                <option value="Proses">Proses</option>
                 <option value="Selesai">Selesai</option>
               </select>
 
@@ -424,14 +421,10 @@ export default function SpreadsheetTable({
                         title="Klik untuk mengubah status kunjungan"
                         style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                       >
-                        {g.status === 'Selesai' && (
+                        {g.status === 'Selesai' ? (
                           <span className="status-badge status-selesai">✓ Selesai</span>
-                        )}
-                        {g.status === 'Sedang Bertemu' && (
-                          <span className="status-badge status-bertemu">⏳ Bertemu</span>
-                        )}
-                        {g.status === 'Menunggu' && (
-                          <span className="status-badge status-menunggu">🔔 Menunggu</span>
+                        ) : (
+                          <span className="status-badge status-bertemu">⏳ Proses</span>
                         )}
                       </button>
                     </td>

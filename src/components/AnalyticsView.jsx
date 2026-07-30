@@ -20,8 +20,7 @@ export default function AnalyticsView({ guests }) {
     const todayGuestsList = guests.filter(g => g.tanggal === todayStr);
     const todayGuests = todayGuestsList.reduce((sum, g) => sum + (g.jumlah || 1), 0);
 
-    const activeMeeting = guests.filter(g => g.status === 'Sedang Bertemu').length;
-    const waiting = guests.filter(g => g.status === 'Menunggu').length;
+    const inProgress = guests.filter(g => g.status === 'Proses' || g.status === 'Menunggu' || g.status === 'Sedang Bertemu').length;
     const completed = guests.filter(g => g.status === 'Selesai').length;
 
     // Top Keperluan Breakdown
@@ -50,8 +49,7 @@ export default function AnalyticsView({ guests }) {
       totalGuests,
       totalVisits,
       todayGuests,
-      activeMeeting,
-      waiting,
+      inProgress,
       completed,
       topKeperluan,
       topInstansi
@@ -96,19 +94,19 @@ export default function AnalyticsView({ guests }) {
           </div>
         </div>
 
-        {/* Sedang Bertemu Card */}
+        {/* Status Kunjungan Card */}
         <div className="glass-card" style={{ background: 'var(--bps-card)', border: '1px solid var(--bps-card-border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Sedang Bertemu / Aktif</span>
-            <div style={{ background: '#15803d', padding: '0.45rem', borderRadius: '0px', display: 'flex', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: '700' }}>Dalam Proses Kunjungan</span>
+            <div style={{ background: '#0284c7', padding: '0.45rem', borderRadius: '0px', display: 'flex', alignItems: 'center' }}>
               <Clock size={18} color="#fff" />
             </div>
           </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--bps-navy)' }}>
-            {stats.activeMeeting} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>sesi</span>
+          <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0284c7' }}>
+            {stats.inProgress} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: '500' }}>sesi</span>
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.3rem', fontWeight: '600' }}>
-            Menunggu: {stats.waiting} | Selesai: {stats.completed}
+          <div style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '0.3rem', fontWeight: '700' }}>
+            ✓ Kunjungan Selesai: {stats.completed} sesi
           </div>
         </div>
 

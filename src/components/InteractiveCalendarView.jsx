@@ -245,8 +245,8 @@ export default function InteractiveCalendarView({ guests }) {
                     <span style={{ fontWeight: '800', color: 'var(--text-primary)', fontSize: '0.85rem' }}>
                       {idx + 1}. {g.nama}
                     </span>
-                    <span className={`status-badge status-${g.status === 'Selesai' ? 'selesai' : g.status === 'Sedang Bertemu' ? 'bertemu' : 'menunggu'}`}>
-                      {g.status}
+                    <span className={`status-badge status-${g.status === 'Selesai' ? 'selesai' : 'bertemu'}`}>
+                      {g.status === 'Selesai' ? '✓ Selesai' : '⏳ Proses'}
                     </span>
                   </div>
 

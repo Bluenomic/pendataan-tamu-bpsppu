@@ -65,8 +65,7 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
                   setFormData({ ...formData, status, jamKeluar });
                 }}
               >
-                <option value="Menunggu">Menunggu</option>
-                <option value="Sedang Bertemu">Sedang Bertemu</option>
+                <option value="Proses">Proses</option>
                 <option value="Selesai">Selesai</option>
               </select>
             </div>

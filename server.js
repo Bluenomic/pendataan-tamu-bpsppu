@@ -30,7 +30,7 @@ db.exec(`
     tanggal TEXT NOT NULL,
     jamMasuk TEXT NOT NULL,
     jamKeluar TEXT DEFAULT '-',
-    status TEXT DEFAULT 'Menunggu',
+    status TEXT DEFAULT 'Proses',
     catatan TEXT,
     ttd TEXT
   );
@@ -40,6 +40,13 @@ db.exec(`
     value TEXT
   );
 `);
+
+// Migration: Migrate legacy statuses to 2-stage status system ('Proses' & 'Selesai')
+try {
+  db.exec("UPDATE guests SET status = 'Proses' WHERE status IN ('Menunggu', 'Sedang Bertemu')");
+} catch (e) {
+  console.warn('[DB Migration] Status update notice:', e.message);
+}
 
 function getAdminPinFromDb() {
   try {
@@ -170,7 +177,7 @@ app.post('/api/public/register', (req, res) => {
       tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
       jamMasuk: guest.jamMasuk || '08:00 WITA',
       jamKeluar: guest.jamKeluar || '-',
-      status: 'Menunggu',
+      status: 'Proses',
       catatan: guest.catatan || '',
       ttd: guest.ttd || ''
     };
