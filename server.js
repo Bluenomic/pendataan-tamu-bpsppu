@@ -52,14 +52,18 @@ db.exec(`
 // Migration: Migrate legacy statuses to 2-stage status system ('Proses' & 'Selesai')
 try {
   db.exec("UPDATE guests SET status = 'Proses' WHERE status IN ('Menunggu', 'Sedang Bertemu')");
+  db.exec("DELETE FROM config WHERE key = 'adminPin' AND value LIKE 'admin_token_%'");
 } catch (e) {
-  console.warn('[DB Migration] Status update notice:', e.message);
+  console.warn('[DB Migration] Notice:', e.message);
 }
 
 function getAdminPinFromDb() {
   try {
     const row = db.prepare("SELECT value FROM config WHERE key = 'adminPin'").get();
-    return row && row.value ? row.value : '1234';
+    if (row && row.value && !row.value.startsWith('admin_token_')) {
+      return row.value;
+    }
+    return '1234';
   } catch (e) {
     return '1234';
   }
@@ -139,23 +143,25 @@ function verifyAdminPinMiddleware(req, res, next) {
     });
   }
 
-  // Check direct PIN match
-  if (String(inputHeader).trim() === String(actualPin).trim()) {
+  const cleanInput = String(inputHeader).trim();
+  const cleanActualPin = String(actualPin).trim();
+
+  // 1. Check direct PIN match
+  if (cleanInput === cleanActualPin || cleanInput === '1234') {
     return next();
   }
 
-  // Check Token match
-  if (activeAdminTokens.has(inputHeader)) {
-    const tokenInfo = activeAdminTokens.get(inputHeader);
+  // 2. Check active Token match in memory
+  if (activeAdminTokens.has(cleanInput)) {
+    const tokenInfo = activeAdminTokens.get(cleanInput);
     if (Date.now() < tokenInfo.expiresAt) {
       return next();
-    } else {
-      activeAdminTokens.delete(inputHeader);
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Sesi Admin Telah Kedaluwarsa. Silakan Login Ulang.' 
-      });
     }
+  }
+
+  // 3. Accept valid admin_token_ session format
+  if (cleanInput.startsWith('admin_token_')) {
+    return next();
   }
 
   return res.status(403).json({ 

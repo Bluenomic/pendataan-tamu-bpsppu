@@ -19,10 +19,16 @@ import {
 import { GOOGLE_APPS_SCRIPT_CODE } from '../utils/googleScriptTemplate';
 
 export default function GoogleSheetsModal({ config, currentAdminPin, onSaveConfig, onClose }) {
+  const getCleanPin = () => {
+    if (currentAdminPin && !currentAdminPin.startsWith('admin_token_')) return currentAdminPin;
+    if (config && config.adminPin && !config.adminPin.startsWith('admin_token_')) return config.adminPin;
+    return '1234';
+  };
+
   const [webhookUrl, setWebhookUrl] = useState(config.webhookUrl || '');
   const [spreadsheetUrl, setSpreadsheetUrl] = useState(config.spreadsheetUrl || '');
   const [officeName, setOfficeName] = useState(config.officeName || 'Badan Pusat Statistik Kabupaten Penajam Paser Utara');
-  const [adminPin, setAdminPin] = useState(currentAdminPin || config.adminPin || '');
+  const [adminPin, setAdminPin] = useState(getCleanPin());
   const [showPin, setShowPin] = useState(false); // Censor toggle state
   
   const [copied, setCopied] = useState(false);
@@ -32,10 +38,18 @@ export default function GoogleSheetsModal({ config, currentAdminPin, onSaveConfi
   const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
-    if (currentAdminPin) {
+    if (config) {
+      if (config.webhookUrl !== undefined) setWebhookUrl(config.webhookUrl || '');
+      if (config.spreadsheetUrl !== undefined) setSpreadsheetUrl(config.spreadsheetUrl || '');
+      if (config.officeName !== undefined) setOfficeName(config.officeName || 'Badan Pusat Statistik Kabupaten Penajam Paser Utara');
+      if (config.adminPin && !config.adminPin.startsWith('admin_token_')) {
+        setAdminPin(config.adminPin);
+      }
+    }
+    if (currentAdminPin && !currentAdminPin.startsWith('admin_token_')) {
       setAdminPin(currentAdminPin);
     }
-  }, [currentAdminPin]);
+  }, [config, currentAdminPin]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(GOOGLE_APPS_SCRIPT_CODE);

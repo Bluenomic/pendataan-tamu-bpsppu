@@ -204,16 +204,11 @@ export default function PublicKioskPage({ config }) {
   };
 
   const handleAddGuest = async (newGuest) => {
-    // 1. Save to SQLite via public API
+    // 1. Save to SQLite via public API (backend automatically syncs to Google Sheets once)
     await saveSingleGuestAsync(newGuest);
 
     // 2. Save/Update pass to device local storage array
     saveOrUpdatePassInLocalStorage(newGuest);
-
-    // 3. Sync to Google Sheets if configured
-    if (config.webhookUrl) {
-      await syncGuestToGoogleSheets(config.webhookUrl, newGuest);
-    }
   };
 
   // Open pass click handler (Header Top Button Only)

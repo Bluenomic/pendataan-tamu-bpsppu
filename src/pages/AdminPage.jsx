@@ -40,6 +40,7 @@ const SESSION_KEY = 'bps_ppu_admin_session_v1';
 
 export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) {
   const [isAdminUnlocked, setIsAdminUnlocked] = useState(false);
+  const [sessionToken, setSessionToken] = useState('');
   const [currentAdminPin, setCurrentAdminPin] = useState('');
   const [pinInput, setPinInput] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -61,8 +62,10 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         const parsed = JSON.parse(savedSession);
         if (parsed && parsed.token && parsed.expiresAt && Date.now() < parsed.expiresAt) {
           const authKey = parsed.token || parsed.pin;
+          const manualPin = (parsed.pin && !parsed.pin.startsWith('admin_token_')) ? parsed.pin : (config.adminPin || '1234');
           setIsAdminUnlocked(true);
-          setCurrentAdminPin(authKey);
+          setSessionToken(authKey);
+          setCurrentAdminPin(manualPin);
           
           getGuestDataAsync(authKey).then(data => {
             if (Array.isArray(data)) setGuests(data);
@@ -78,12 +81,13 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
 
   // Real-time Auto-Polling: Refresh guest data every 3 seconds when Admin Panel is open
   useEffect(() => {
-    if (!isAdminUnlocked || !currentAdminPin) return;
+    const activeAuth = sessionToken || currentAdminPin;
+    if (!isAdminUnlocked || !activeAuth) return;
 
     let isMounted = true;
     const fetchLatestGuests = async () => {
       try {
-        const latestData = await getGuestDataAsync(currentAdminPin);
+        const latestData = await getGuestDataAsync(activeAuth);
         if (isMounted && Array.isArray(latestData)) {
           setGuests(latestData);
         }
@@ -97,7 +101,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [isAdminUnlocked, currentAdminPin]);
+  }, [isAdminUnlocked, sessionToken, currentAdminPin]);
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -117,15 +121,17 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
         const resData = await response.json();
         const authKey = resData.token || pinInput.trim();
         const expiresAt = resData.expiresAt || (Date.now() + 2 * 60 * 60 * 1000);
+        const manualPin = pinInput.trim();
 
         setIsAdminUnlocked(true);
-        setCurrentAdminPin(authKey);
+        setSessionToken(authKey);
+        setCurrentAdminPin(manualPin);
         setLoginError('');
 
         localStorage.setItem(SESSION_KEY, JSON.stringify({
           token: authKey,
           expiresAt,
-          pin: pinInput.trim()
+          pin: manualPin
         }));
 
         const fetchedGuests = await getGuestDataAsync(authKey);
@@ -149,8 +155,11 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     setLoginError('');
   };
 
+  const getAuthHeaderKey = () => sessionToken || currentAdminPin || config.adminPin || '1234';
+
   const handleSaveConfigAdmin = async (newConfig) => {
-    await saveAppConfigAsync(newConfig, currentAdminPin);
+    const authKey = getAuthHeaderKey();
+    await saveAppConfigAsync(newConfig, authKey);
     
     if (newConfig.adminPin) {
       setCurrentAdminPin(newConfig.adminPin);
@@ -161,28 +170,22 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   };
 
   const handleUpdateGuest = async (updatedGuest) => {
+    const authKey = getAuthHeaderKey();
     setGuests(prev => prev.map(g => g.id === updatedGuest.id ? updatedGuest : g));
-    await updateSingleGuestAsync(updatedGuest, currentAdminPin);
-    if (config.webhookUrl) {
-      syncGuestToGoogleSheets(config.webhookUrl, updatedGuest);
-    }
+    await updateSingleGuestAsync(updatedGuest, authKey);
   };
 
   const handleDeleteGuest = async (id) => {
+    const authKey = getAuthHeaderKey();
     setGuests(prev => prev.filter(g => g.id !== id));
-    await deleteSingleGuestAsync(id, currentAdminPin);
-    if (config.webhookUrl) {
-      deleteGuestFromGoogleSheets(config.webhookUrl, id);
-    }
+    await deleteSingleGuestAsync(id, authKey);
     setToast({ message: 'Data tamu berhasil dihapus.', type: 'success' });
   };
 
   const handleImportGuests = async (importedList) => {
+    const authKey = getAuthHeaderKey();
     setGuests(prev => [...importedList, ...prev]);
-    await importGuestsAsync(importedList, currentAdminPin);
-    if (config.webhookUrl) {
-      syncBatchGuestsToGoogleSheets(config.webhookUrl, importedList);
-    }
+    await importGuestsAsync(importedList, authKey);
     setToast({ message: `Berhasil mengimpor ${importedList.length} data dari Excel!`, type: 'success' });
   };
 
@@ -200,16 +203,13 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
       tanggal: now.toISOString().split('T')[0],
       jamMasuk: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`,
       jamKeluar: '-',
-      status: 'Menunggu',
+      status: 'Proses',
       catatan: 'Diinput manual dari tabel admin',
       ttd: ''
     };
     
     setGuests(prev => [manualGuest, ...prev]);
     await saveSingleGuestAsync(manualGuest);
-    if (config.webhookUrl) {
-      syncGuestToGoogleSheets(config.webhookUrl, manualGuest);
-    }
     setEditingGuest(manualGuest);
   };
 
@@ -229,6 +229,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
   };
 
   const handleBulkCheckoutToday = async () => {
+    const authKey = getAuthHeaderKey();
     const todayStr = new Date().toISOString().split('T')[0];
     const activeCount = guests.filter(g => g.tanggal === todayStr && g.status !== 'Selesai').length;
     
@@ -238,9 +239,9 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     }
 
     if (window.confirm(`Apakah Anda yakin ingin menyelesaikan & Check-Out seluruh ${activeCount} tamu aktif hari ini sekaligus?`)) {
-      const res = await checkoutAllTodayAsync(currentAdminPin);
+      const res = await checkoutAllTodayAsync(authKey);
       if (res && res.success && res.count > 0) {
-        const fetchedGuests = await getGuestDataAsync(currentAdminPin);
+        const fetchedGuests = await getGuestDataAsync(authKey);
         setGuests(fetchedGuests);
         setToast({ message: `Berhasil Check-Out massal untuk ${res.count} tamu hari ini!`, type: 'success' });
       } else {
