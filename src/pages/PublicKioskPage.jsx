@@ -13,14 +13,21 @@ export default function PublicKioskPage({ config }) {
   const [isPassSelectorOpen, setIsPassSelectorOpen] = useState(false);
   const [showBanner] = useState(true);
 
-  // Load active passes from local storage on mount
+  // Load active passes from local storage on mount (Auto-prune older than 24 hours)
   useEffect(() => {
     try {
       const savedPasses = localStorage.getItem(LOCAL_STORAGE_PASSES_KEY);
       if (savedPasses) {
         const parsed = JSON.parse(savedPasses);
         if (Array.isArray(parsed)) {
-          setMyPasses(parsed);
+          const now = Date.now();
+          const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+          const validPasses = parsed.filter(pass => {
+            const passTime = pass.timestamp || (pass.tanggal ? new Date(pass.tanggal).getTime() : now);
+            return now - passTime < TWENTY_FOUR_HOURS_MS;
+          });
+          setMyPasses(validPasses);
+          localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(validPasses));
         }
       }
     } catch (e) {
@@ -31,15 +38,27 @@ export default function PublicKioskPage({ config }) {
   // Save or update pass in local storage array
   const saveOrUpdatePassInLocalStorage = (guestPass) => {
     try {
+      const passWithTimestamp = {
+        ...guestPass,
+        timestamp: guestPass.timestamp || Date.now()
+      };
       const existing = [...myPasses];
-      const idx = existing.findIndex(p => p.id === guestPass.id);
+      const idx = existing.findIndex(p => p.id === passWithTimestamp.id);
       if (idx >= 0) {
-        existing[idx] = guestPass;
+        existing[idx] = passWithTimestamp;
       } else {
-        existing.unshift(guestPass); // Insert new pass at the front
+        existing.unshift(passWithTimestamp); // Insert new pass at the front
       }
-      localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(existing));
-      setMyPasses(existing);
+
+      const now = Date.now();
+      const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+      const validPasses = existing.filter(pass => {
+        const passTime = pass.timestamp || (pass.tanggal ? new Date(pass.tanggal).getTime() : now);
+        return now - passTime < TWENTY_FOUR_HOURS_MS;
+      });
+
+      localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(validPasses));
+      setMyPasses(validPasses);
     } catch (e) {
       console.error('Failed to save pass to localStorage:', e);
     }

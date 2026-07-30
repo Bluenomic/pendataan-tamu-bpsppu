@@ -132,7 +132,8 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
       jamMasuk: `${hours}:${mins} WITA`,
       jamKeluar: '-',
       status: 'Menunggu',
-      ttd: ttdDataUrl
+      ttd: ttdDataUrl,
+      timestamp: now.getTime()
     };
 
     try {
