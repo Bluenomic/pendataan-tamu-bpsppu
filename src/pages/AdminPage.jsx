@@ -29,7 +29,8 @@ import {
   ShieldAlert,
   ArrowLeft,
   Sun,
-  Moon
+  Moon,
+  ExternalLink
 } from 'lucide-react';
 
 const SESSION_KEY = 'bps_ppu_admin_session_v1';
@@ -223,6 +224,13 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     });
   };
 
+  const handleOpenSpreadsheet = () => {
+    const targetUrl = (config && config.spreadsheetUrl && config.spreadsheetUrl.trim())
+      ? config.spreadsheetUrl.trim()
+      : 'https://docs.google.com/spreadsheets/';
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
+
   const isSheetsConnected = Boolean(config?.webhookUrl);
 
   if (!isAdminUnlocked) {
@@ -346,6 +354,17 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
 
             <div className="admin-controls-flex">
               
+              <button 
+                onClick={handleOpenSpreadsheet}
+                className="btn-admin-header-action"
+                style={{ background: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(74, 222, 128, 0.4)', color: '#ffffff' }}
+                title="Buka Dokumen Google Spreadsheet di Tab Baru"
+              >
+                <FileSpreadsheet size={15} color="#4ade80" />
+                <span className="hide-on-mobile" style={{ fontWeight: '800' }}>Buka Spreadsheet</span>
+                <ExternalLink size={13} color="#4ade80" />
+              </button>
+
               <button 
                 onClick={() => setIsConfigModalOpen(true)}
                 className="btn-admin-header-action"

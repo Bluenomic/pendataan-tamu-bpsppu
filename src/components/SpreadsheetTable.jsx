@@ -16,6 +16,7 @@ import {
   Square,
   FileText,
   PenTool,
+  ExternalLink,
   X
 } from 'lucide-react';
 import { exportToExcel, importFromExcel } from '../utils/storage';
@@ -205,6 +206,22 @@ export default function SpreadsheetTable({
               >
                 <RefreshCw size={15} className={isSyncing ? 'spin' : ''} />
                 <span>Sync Sheets</span>
+              </button>
+
+              <button 
+                className="btn btn-success btn-sm btn-action-touch"
+                onClick={() => {
+                  const targetUrl = (config && config.spreadsheetUrl && config.spreadsheetUrl.trim())
+                    ? config.spreadsheetUrl.trim()
+                    : 'https://docs.google.com/spreadsheets/';
+                  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                }}
+                title="Buka Dokumen Google Spreadsheet di Tab Baru"
+                style={{ background: '#15803d', borderColor: '#16a34a', fontWeight: '800' }}
+              >
+                <FileSpreadsheet size={15} />
+                <span>Buka Spreadsheet</span>
+                <ExternalLink size={13} />
               </button>
 
               <button 

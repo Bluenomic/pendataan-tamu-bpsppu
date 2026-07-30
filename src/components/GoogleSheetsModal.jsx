@@ -20,6 +20,7 @@ import { GOOGLE_APPS_SCRIPT_CODE } from '../utils/googleScriptTemplate';
 
 export default function GoogleSheetsModal({ config, currentAdminPin, onSaveConfig, onClose }) {
   const [webhookUrl, setWebhookUrl] = useState(config.webhookUrl || '');
+  const [spreadsheetUrl, setSpreadsheetUrl] = useState(config.spreadsheetUrl || '');
   const [officeName, setOfficeName] = useState(config.officeName || 'Badan Pusat Statistik Kabupaten Penajam Paser Utara');
   const [adminPin, setAdminPin] = useState(currentAdminPin || config.adminPin || '');
   const [showPin, setShowPin] = useState(false); // Censor toggle state
@@ -97,6 +98,7 @@ export default function GoogleSheetsModal({ config, currentAdminPin, onSaveConfi
     onSaveConfig({
       ...config,
       webhookUrl: webhookUrl.trim(),
+      spreadsheetUrl: spreadsheetUrl.trim(),
       officeName: officeName.trim(),
       adminPin: adminPin.trim()
     });
@@ -273,6 +275,21 @@ export default function GoogleSheetsModal({ config, currentAdminPin, onSaveConfi
                 {testResult.message}
               </div>
             )}
+
+            {/* Direct Google Spreadsheet View Link */}
+            <div className="form-group" style={{ marginBottom: '1rem' }}>
+              <label className="form-label" style={{ fontWeight: '700' }}>Link / URL File Google Spreadsheet (Untuk Tombol Buka Spreadsheet)</label>
+              <input 
+                type="url" 
+                className="form-input"
+                value={spreadsheetUrl}
+                onChange={(e) => setSpreadsheetUrl(e.target.value)}
+                placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', margin: 0 }}>
+                Tempel link Google Spreadsheet Anda di sini agar tombol "Buka Google Sheets" di Admin Panel langsung membuka dokumen Anda secara otomatis.
+              </p>
+            </div>
 
             {/* Nama Instansi */}
             <div className="form-group">
