@@ -247,6 +247,21 @@ app.get('/api/public/active-guests', (req, res) => {
   }
 });
 
+// PUBLIC API: Get Status for Specific Guest Pass IDs (Live Status Sync for Kiosk / User Devices)
+app.post('/api/public/passes-status', (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+    const placeholders = ids.map(() => '?').join(',');
+    const guests = db.prepare(`SELECT id, status, jamKeluar FROM guests WHERE id IN (${placeholders})`).all(...ids);
+    res.json({ success: true, data: guests });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // PUBLIC API: Fetch Config
 app.get('/api/public/config', (req, res) => {
   try {

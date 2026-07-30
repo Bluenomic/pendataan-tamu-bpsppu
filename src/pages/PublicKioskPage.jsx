@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import GuestForm from '../components/GuestForm';
 import GuestPassModal from '../components/GuestPassModal';
 import PassSelectorModal from '../components/PassSelectorModal';
-import { saveSingleGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
+import { saveSingleGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync } from '../utils/storage';
 import { Clock, MapPin, Ticket, Layers } from 'lucide-react';
 
 const LOCAL_STORAGE_PASSES_KEY = 'bps_ppu_guest_passes_v2';
@@ -33,6 +33,60 @@ export default function PublicKioskPage({ config }) {
     } catch (e) {
       console.error('Failed to load passes from localStorage:', e);
     }
+  }, []);
+
+  // Live Sync Pass Status: Automatically sync pass status from backend server every 3 seconds
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncStatusFromBackend = async () => {
+      try {
+        const savedPassesStr = localStorage.getItem(LOCAL_STORAGE_PASSES_KEY);
+        if (!savedPassesStr) return;
+        const currentLocalPasses = JSON.parse(savedPassesStr);
+        if (!Array.isArray(currentLocalPasses) || currentLocalPasses.length === 0) return;
+
+        const passIds = currentLocalPasses.map(p => p.id);
+        const serverStatuses = await fetchPassesStatusAsync(passIds);
+        if (!isMounted || !Array.isArray(serverStatuses) || serverStatuses.length === 0) return;
+
+        let hasChange = false;
+        const updatedPasses = currentLocalPasses.map(localPass => {
+          const matched = serverStatuses.find(s => s.id === localPass.id);
+          if (matched && (matched.status !== localPass.status || (matched.jamKeluar && matched.jamKeluar !== localPass.jamKeluar))) {
+            hasChange = true;
+            return {
+              ...localPass,
+              status: matched.status,
+              jamKeluar: matched.jamKeluar || localPass.jamKeluar
+            };
+          }
+          return localPass;
+        });
+
+        if (hasChange && isMounted) {
+          setMyPasses(updatedPasses);
+          localStorage.setItem(LOCAL_STORAGE_PASSES_KEY, JSON.stringify(updatedPasses));
+
+          setSelectedPassGuest(prevSelected => {
+            if (prevSelected) {
+              const updatedSelected = updatedPasses.find(p => p.id === prevSelected.id);
+              return updatedSelected ? { ...updatedSelected } : prevSelected;
+            }
+            return prevSelected;
+          });
+        }
+      } catch (e) {
+        console.error('Failed to live sync pass status:', e);
+      }
+    };
+
+    syncStatusFromBackend();
+    const intervalId = setInterval(syncStatusFromBackend, 3000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Save or update pass in local storage array

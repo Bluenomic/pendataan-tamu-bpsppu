@@ -1,10 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Ticket, Eye, LogOut, CheckCircle2, Clock, Building, Trash2 } from 'lucide-react';
-import { checkoutGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
+import { checkoutGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync } from '../utils/storage';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function PassSelectorModal({ passes, config, onSelectPass, onUpdatePass, onDeleteLocalPass, onClose }) {
   const [passToDelete, setPassToDelete] = useState(null);
+
+  // Live Sync status for all passes in selector list
+  useEffect(() => {
+    if (!Array.isArray(passes) || passes.length === 0) return;
+
+    let isMounted = true;
+    const checkPasses = async () => {
+      try {
+        const ids = passes.map(p => p.id);
+        const serverStatuses = await fetchPassesStatusAsync(ids);
+        if (!isMounted || !Array.isArray(serverStatuses) || serverStatuses.length === 0) return;
+
+        serverStatuses.forEach(s => {
+          const localMatch = passes.find(p => p.id === s.id);
+          if (localMatch && (localMatch.status !== s.status || (s.jamKeluar && s.jamKeluar !== localMatch.jamKeluar))) {
+            onUpdatePass({
+              ...localMatch,
+              status: s.status,
+              jamKeluar: s.jamKeluar || localMatch.jamKeluar
+            });
+          }
+        });
+      } catch (e) {
+        console.error('Failed selector modal status sync:', e);
+      }
+    };
+
+    checkPasses();
+    const intervalId = setInterval(checkPasses, 2000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [passes, onUpdatePass]);
 
   const handleCheckOutSingle = async (passItem, e) => {
     e.stopPropagation();

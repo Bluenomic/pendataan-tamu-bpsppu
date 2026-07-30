@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Printer, Clock, QrCode, CheckCircle, MapPin, LogOut, Sparkles, Trash2 } from 'lucide-react';
-import { checkoutGuestAsync, syncGuestToGoogleSheets } from '../utils/storage';
+import { checkoutGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync } from '../utils/storage';
 import ConfirmDeleteModal from './ConfirmDeleteModal';
 
 export default function GuestPassModal({ guest, officeName, onClose, config, onUpdateLocalPass, onDeleteLocalPass }) {
@@ -8,6 +8,48 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutMsg, setCheckoutMsg] = useState('');
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+
+  // Sync internal guest state whenever parent prop changes (e.g. Real-time Live Status Sync)
+  useEffect(() => {
+    if (guest) {
+      setCurrentGuest(guest);
+    }
+  }, [guest]);
+
+  // Live Sync directly inside open modal: Poll server for status updates every 2 seconds if not completed
+  useEffect(() => {
+    if (!currentGuest || currentGuest.status?.toLowerCase() === 'selesai') return;
+
+    let isMounted = true;
+    const checkStatus = async () => {
+      try {
+        const res = await fetchPassesStatusAsync([currentGuest.id]);
+        if (!isMounted || !Array.isArray(res) || res.length === 0) return;
+
+        const matched = res[0];
+        if (matched && (matched.status !== currentGuest.status || (matched.jamKeluar && matched.jamKeluar !== currentGuest.jamKeluar))) {
+          const updated = {
+            ...currentGuest,
+            status: matched.status,
+            jamKeluar: matched.jamKeluar || currentGuest.jamKeluar
+          };
+          setCurrentGuest(updated);
+          if (onUpdateLocalPass) {
+            onUpdateLocalPass(updated);
+          }
+        }
+      } catch (e) {
+        console.error('Failed modal status sync:', e);
+      }
+    };
+
+    checkStatus();
+    const intervalId = setInterval(checkStatus, 2000);
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, [currentGuest?.id, currentGuest?.status, currentGuest?.jamKeluar]);
 
   if (!currentGuest) return null;
 
@@ -48,7 +90,7 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
     }
   };
 
-  const isCompleted = currentGuest.status === 'Selesai';
+  const isCompleted = currentGuest.status?.toLowerCase() === 'selesai' || (currentGuest.jamKeluar && currentGuest.jamKeluar !== '-');
 
   return (
     <div className="modal-overlay" onClick={onClose}>

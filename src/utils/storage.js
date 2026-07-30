@@ -32,9 +32,14 @@ export const checkoutGuestAsync = async (guestId) => {
 };
 
 // PUBLIC API: Get Active Guests for Today's Self Check-Out
-export const getActiveGuestsAsync = async () => {
+export const fetchPassesStatusAsync = async (ids) => {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
   try {
-    const response = await fetch('/api/public/active-guests');
+    const response = await fetch('/api/public/passes-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    });
     if (response.ok) {
       const resData = await response.json();
       if (resData.success && resData.data) {
@@ -42,7 +47,7 @@ export const getActiveGuestsAsync = async () => {
       }
     }
   } catch (e) {
-    console.error('[Public API] Failed to fetch active guests:', e);
+    console.error('[Public API] Failed to fetch passes status:', e);
   }
   return [];
 };
