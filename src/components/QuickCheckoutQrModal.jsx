@@ -65,7 +65,7 @@ export default function QuickCheckoutQrModal({ isOpen, onClose, config }) {
             justifyContent: 'center',
             gap: '0.5rem'
           }}>
-            <Sparkles size={18} /> QUICK CHECK-OUT KUNJUNGAN
+            QUICK CHECK-OUT KUNJUNGAN
           </div>
 
           {/* QR Code Frame */}
@@ -103,10 +103,6 @@ export default function QuickCheckoutQrModal({ isOpen, onClose, config }) {
               <li>Arahkan kamera ke Kode QR di atas.</li>
               <li>Seluruh tiket kunjungan aktif Anda akan <b>otomatis Check-Out Selesai</b>.</li>
             </ol>
-          </div>
-
-          <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic' }}>
-            *Kode QR ini bersifat statis & permanen. Dapat dicetak dan dipasang pada pintu keluar PST.
           </div>
         </div>
 
