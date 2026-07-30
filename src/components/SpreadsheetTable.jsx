@@ -17,6 +17,7 @@ import {
   FileText,
   PenTool,
   ExternalLink,
+  LogOut,
   X
 } from 'lucide-react';
 import { exportToExcel, importFromExcel } from '../utils/storage';
@@ -29,6 +30,7 @@ export default function SpreadsheetTable({
   onDeleteGuest, 
   onImportGuests, 
   onSyncGoogleSheets,
+  onBulkCheckoutToday,
   onShowPass,
   onEditGuest,
   onAddNewManual
@@ -40,6 +42,11 @@ export default function SpreadsheetTable({
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [previewTtdGuest, setPreviewTtdGuest] = useState(null);
+
+  const activeTodayCount = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return guests.filter(g => g.tanggal === today && g.status !== 'Selesai').length;
+  }, [guests]);
 
   const filteredGuests = useMemo(() => {
     return guests.filter((g) => {
@@ -206,6 +213,23 @@ export default function SpreadsheetTable({
               >
                 <RefreshCw size={15} className={isSyncing ? 'spin' : ''} />
                 <span>Sync Sheets</span>
+              </button>
+
+              <button 
+                className="btn btn-sm btn-action-touch"
+                onClick={onBulkCheckoutToday}
+                disabled={activeTodayCount === 0}
+                style={{
+                  background: activeTodayCount > 0 ? '#16a34a' : 'var(--bps-bg)',
+                  color: activeTodayCount > 0 ? '#ffffff' : 'var(--text-muted)',
+                  border: '1px solid ' + (activeTodayCount > 0 ? '#15803d' : 'var(--bps-card-border)'),
+                  fontWeight: '800',
+                  opacity: activeTodayCount === 0 ? 0.6 : 1
+                }}
+                title="Tandai Selesai & Check-Out seluruh tamu aktif hari ini sekaligus"
+              >
+                <LogOut size={15} />
+                <span>Check-Out Massal ({activeTodayCount})</span>
               </button>
 
               <button 

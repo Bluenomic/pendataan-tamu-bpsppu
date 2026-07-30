@@ -74,6 +74,41 @@ async function syncToGoogleSheetsServer(payload) {
   }
 }
 
+// Fallback Opsi 1: Auto Check-Out Otomatis Lintas Hari (Previous Days Sweep)
+function autoCheckoutPreviousDaysGuests() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const pendingGuests = db.prepare(
+      "SELECT * FROM guests WHERE status != 'Selesai' AND tanggal < ?"
+    ).all(today);
+
+    if (pendingGuests.length > 0) {
+      const updateStmt = db.prepare(
+        "UPDATE guests SET status = 'Selesai', jamKeluar = '16:00 WITA (Auto Check-Out)' WHERE id = ?"
+      );
+
+      const updateBatch = db.transaction((list) => {
+        for (const guest of list) {
+          updateStmt.run(guest.id);
+          syncToGoogleSheetsServer({
+            ...guest,
+            status: 'Selesai',
+            jamKeluar: '16:00 WITA (Auto Check-Out)'
+          });
+        }
+      });
+
+      updateBatch(pendingGuests);
+      console.log(`[Auto Check-Out Sweep] Automatically checked out ${pendingGuests.length} guest(s) from previous days.`);
+    }
+  } catch (e) {
+    console.error('[Auto Check-Out Sweep Error]:', e.message);
+  }
+}
+
+// Run sweep on server startup
+autoCheckoutPreviousDaysGuests();
+
 // In-Memory Token Store for Admin Sessions (default 2 hours duration)
 const activeAdminTokens = new Map();
 const SESSION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Jam
@@ -203,6 +238,7 @@ app.post('/api/public/checkout', (req, res) => {
 // PUBLIC API: Get Active Guests for Today's Self Check-Out
 app.get('/api/public/active-guests', (req, res) => {
   try {
+    autoCheckoutPreviousDaysGuests();
     const today = new Date().toISOString().split('T')[0];
     const guests = db.prepare("SELECT id, nama, instansi, jamMasuk, status FROM guests WHERE status != 'Selesai' AND tanggal = ? ORDER BY jamMasuk DESC").all(today);
     res.json({ success: true, data: guests });
@@ -259,8 +295,52 @@ app.post('/api/admin/login', (req, res) => {
 // ADMIN API: Get All Guests
 app.get('/api/admin/guests', verifyAdminPinMiddleware, (req, res) => {
   try {
+    autoCheckoutPreviousDaysGuests();
     const guests = db.prepare('SELECT * FROM guests ORDER BY tanggal DESC, jamMasuk DESC').all();
     res.json({ success: true, data: guests });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ADMIN API: Bulk Check-Out All Active Guests Today (Opsi 3 Fallback)
+app.post('/api/admin/checkout-all-today', verifyAdminPinMiddleware, (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
+
+    const activeToday = db.prepare(
+      "SELECT * FROM guests WHERE status != 'Selesai' AND tanggal = ?"
+    ).all(today);
+
+    if (activeToday.length === 0) {
+      return res.json({ success: true, count: 0, message: 'Tidak ada tamu aktif untuk di-checkout hari ini.' });
+    }
+
+    const updateStmt = db.prepare(
+      "UPDATE guests SET status = 'Selesai', jamKeluar = ? WHERE id = ?"
+    );
+
+    const updateTransaction = db.transaction((list) => {
+      for (const g of list) {
+        updateStmt.run(jamKeluar, g.id);
+        syncToGoogleSheetsServer({
+          ...g,
+          status: 'Selesai',
+          jamKeluar
+        });
+      }
+    });
+
+    updateTransaction(activeToday);
+
+    res.json({ 
+      success: true, 
+      count: activeToday.length, 
+      jamKeluar,
+      message: `Berhasil melakukan Check-Out massal untuk ${activeToday.length} tamu hari ini.` 
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -14,7 +14,8 @@ import {
   syncGuestToGoogleSheets,
   importGuestsAsync, 
   saveAppConfigAsync, 
-  syncBatchGuestsToGoogleSheets 
+  syncBatchGuestsToGoogleSheets,
+  checkoutAllTodayAsync
 } from '../utils/storage';
 import { 
   Lock, 
@@ -224,6 +225,27 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
     });
   };
 
+  const handleBulkCheckoutToday = async () => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    const activeCount = guests.filter(g => g.tanggal === todayStr && g.status !== 'Selesai').length;
+    
+    if (activeCount === 0) {
+      setToast({ message: 'Tidak ada tamu aktif untuk di-checkout hari ini.', type: 'info' });
+      return;
+    }
+
+    if (window.confirm(`Apakah Anda yakin ingin menyelesaikan & Check-Out seluruh ${activeCount} tamu aktif hari ini sekaligus?`)) {
+      const res = await checkoutAllTodayAsync(currentAdminPin);
+      if (res && res.success && res.count > 0) {
+        const fetchedGuests = await getGuestDataAsync(currentAdminPin);
+        setGuests(fetchedGuests);
+        setToast({ message: `Berhasil Check-Out massal untuk ${res.count} tamu hari ini!`, type: 'success' });
+      } else {
+        setToast({ message: res.message || 'Gagal melakukan check-out massal.', type: 'error' });
+      }
+    }
+  };
+
   const handleOpenSpreadsheet = () => {
     const targetUrl = (config && config.spreadsheetUrl && config.spreadsheetUrl.trim())
       ? config.spreadsheetUrl.trim()
@@ -430,6 +452,7 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
             onDeleteGuest={handleDeleteGuest}
             onImportGuests={handleImportGuests}
             onSyncGoogleSheets={handleSyncGoogleSheets}
+            onBulkCheckoutToday={handleBulkCheckoutToday}
             onShowPass={(guest) => setSelectedPassGuest(guest)}
             onEditGuest={(guest) => setEditingGuest(guest)}
             onAddNewManual={handleAddNewManual}

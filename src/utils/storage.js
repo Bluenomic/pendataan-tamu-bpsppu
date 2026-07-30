@@ -47,6 +47,22 @@ export const getActiveGuestsAsync = async () => {
   return [];
 };
 
+export const checkoutAllTodayAsync = async (adminPin) => {
+  if (!adminPin) return { success: false };
+  try {
+    const response = await fetch('/api/admin/checkout-all-today', {
+      method: 'POST',
+      headers: { 'x-admin-pin': adminPin }
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    console.error('[Admin API] Failed bulk checkout today:', e);
+  }
+  return { success: false };
+};
+
 export const getGuestDataAsync = async (adminPin) => {
   if (!adminPin) return [];
 
