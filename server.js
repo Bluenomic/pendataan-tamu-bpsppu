@@ -289,7 +289,8 @@ app.get('/api/public/config', (req, res) => {
         officeName: config.officeName || 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
         subTitle: config.subTitle || 'Pelayanan Statistik Terpadu (PST BPS PPU)',
         address: config.address || 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411',
-        webhookUrl: config.webhookUrl || ''
+        webhookUrl: config.webhookUrl || '',
+        spreadsheetUrl: config.spreadsheetUrl || ''
       }
     });
   } catch (error) {

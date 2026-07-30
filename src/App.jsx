@@ -11,6 +11,7 @@ export default function App() {
     subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
     address: 'Jl. Provinsi Km.09 Nipah-Nipah, Penajam, 76411',
     webhookUrl: '',
+    spreadsheetUrl: '',
     autoSync: true,
     adminPin: '1234'
   });

@@ -154,6 +154,7 @@ export const getAppConfigAsync = async () => {
 export const getAppConfig = () => {
   return {
     webhookUrl: '',
+    spreadsheetUrl: '',
     autoSync: true,
     officeName: 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
     subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
