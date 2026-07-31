@@ -529,5 +529,147 @@ body {
   }
 }
 
+/* ==========================================
+   Quick Re-Registration Autocomplete Dropdown
+   ========================================== */
+.autocomplete-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--bps-card);
+  border: 1px solid var(--bps-cyan);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  max-height: 280px;
+  overflow-y: auto;
+  animation: fadeInDown 0.18s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.suggestions-header {
+  padding: 0.5rem 0.85rem;
+  background: rgba(0, 153, 219, 0.08);
+  border-bottom: 1px solid var(--bps-card-border);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--bps-cyan);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.suggestion-item {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--bps-card-border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: var(--transition-fast);
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: rgba(0, 153, 219, 0.06);
+}
+
+.suggestion-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.suggestion-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bps-navy);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.suggestion-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.suggestion-name {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suggestion-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  opacity: 0.6;
+}
+
+.suggestion-delete-btn:hover {
+  color: var(--danger);
+  background: var(--danger-bg);
+  opacity: 1;
+}
+
+.autofill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--success-bg);
+  color: var(--success);
+  font-size: 0.775rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  margin-top: 0.35rem;
+  animation: fadeInDown 0.2s ease-out;
+}
+
+
 
 

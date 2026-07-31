@@ -339,3 +339,67 @@ export const syncBatchGuestsToGoogleSheets = async (webhookUrl, guestList) => {
     return { success: false, message: error.message };
   }
 };
+
+// ==========================================
+// CLIENT-SIDE QUICK RE-REGISTRATION PROFILES
+// ==========================================
+const RECENT_PROFILES_KEY = 'bps_ppu_recent_profiles_v1';
+const MAX_RECENT_PROFILES = 20;
+
+export const getRecentProfiles = () => {
+  try {
+    const data = localStorage.getItem(RECENT_PROFILES_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error('Failed to parse recent profiles:', e);
+  }
+  return [];
+};
+
+export const saveRecentProfile = (profile) => {
+  if (!profile || !profile.nama || !profile.nama.trim()) return [];
+  try {
+    const existing = getRecentProfiles();
+    const cleanNama = profile.nama.trim();
+    const cleanNoHp = (profile.noHp || '').trim();
+
+    // Filter out duplicate if matches name (case-insensitive) or phone number
+    const filtered = existing.filter(p => {
+      const matchName = p.nama && p.nama.toLowerCase() === cleanNama.toLowerCase();
+      const matchPhone = cleanNoHp && p.noHp && p.noHp === cleanNoHp;
+      return !matchName && !matchPhone;
+    });
+
+    const newProfile = {
+      id: `prof_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      nama: cleanNama,
+      noHp: cleanNoHp,
+      instansi: (profile.instansi || '').trim(),
+      nik: (profile.nik || '').trim(),
+      lastVisited: Date.now()
+    };
+
+    const updated = [newProfile, ...filtered].slice(0, MAX_RECENT_PROFILES);
+    localStorage.setItem(RECENT_PROFILES_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.error('Failed to save recent profile:', e);
+  }
+  return [];
+};
+
+export const deleteRecentProfile = (profileId) => {
+  try {
+    const existing = getRecentProfiles();
+    const updated = existing.filter(p => p.id !== profileId);
+    localStorage.setItem(RECENT_PROFILES_KEY, JSON.stringify(updated));
+    return updated;
+  } catch (e) {
+    console.error('Failed to delete recent profile:', e);
+  }
+  return [];
+};
+

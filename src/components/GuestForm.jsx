@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   User, 
   Phone, 
@@ -13,9 +13,14 @@ import {
   RotateCcw,
   Sparkles,
   QrCode,
-  LogOut
+  LogOut,
+  History,
+  Trash2,
+  UserCheck,
+  X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { getRecentProfiles, saveRecentProfile, deleteRecentProfile } from '../utils/storage';
 
 export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
   const [formData, setFormData] = useState({
@@ -30,7 +35,28 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
   });
 
   const [isDrawing, setIsDrawing] = useState(false);
+  const [recentProfiles, setRecentProfiles] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [autofillBadge, setAutofillBadge] = useState('');
+  
   const canvasRef = useRef(null);
+  const suggestionRef = useRef(null);
+
+  // Load recent profiles from local storage on mount
+  useEffect(() => {
+    setRecentProfiles(getRecentProfiles());
+  }, []);
+
+  // Close suggestion dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const keperluanOptions = [
     'Konsultasi Data & Informasi Statistik',
@@ -53,6 +79,35 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
     'Tim Distribusi & Jasa',
     'Tim Pengolahan & TI'
   ];
+
+  const filteredSuggestions = recentProfiles.filter(p => {
+    if (!formData.nama.trim()) return true;
+    const query = formData.nama.toLowerCase().trim();
+    return (
+      (p.nama && p.nama.toLowerCase().includes(query)) ||
+      (p.instansi && p.instansi.toLowerCase().includes(query)) ||
+      (p.noHp && p.noHp.includes(query))
+    );
+  });
+
+  const handleSelectSuggestion = (profile) => {
+    setFormData(prev => ({
+      ...prev,
+      nama: profile.nama || '',
+      noHp: profile.noHp || '',
+      instansi: profile.instansi || '',
+      nik: profile.nik || ''
+    }));
+    setShowSuggestions(false);
+    setAutofillBadge(`Profil "${profile.nama}" terisi otomatis!`);
+    setTimeout(() => setAutofillBadge(''), 4000);
+  };
+
+  const handleDeleteSuggestion = (e, profileId) => {
+    e.stopPropagation();
+    const updated = deleteRecentProfile(profileId);
+    setRecentProfiles(updated);
+  };
 
   // Precision Coordinate Calculation (Scaling CSS display vs internal Canvas resolution)
   const getCanvasCoordinates = (e) => {
@@ -114,6 +169,17 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
     if (!formData.nama.trim() || !formData.instansi.trim()) {
       alert('Mohon lengkapi Nama Lengkap dan Instansi / Alamat!');
       return;
+    }
+
+    // Save profile to local storage for quick re-registration suggestions
+    const updatedLocals = saveRecentProfile({
+      nama: formData.nama,
+      noHp: formData.noHp,
+      instansi: formData.instansi,
+      nik: formData.nik
+    });
+    if (Array.isArray(updatedLocals) && updatedLocals.length > 0) {
+      setRecentProfiles(updatedLocals);
     }
 
     let ttdDataUrl = '';
@@ -197,20 +263,74 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
           <form onSubmit={handleSubmit}>
             <div className="responsive-form-grid">
               
-              <div className="form-group full-width-field">
-                <label className="form-label">
-                  <User size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                  Nama Lengkap Tamu / Penanggung Jawab *
-                </label>
+              <div className="form-group full-width-field autocomplete-wrapper" ref={suggestionRef}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <label className="form-label">
+                    <User size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                    Nama Lengkap Tamu / Penanggung Jawab *
+                  </label>
+                  {recentProfiles.length > 0 && (
+                    <span style={{ fontSize: '0.725rem', color: 'var(--bps-cyan)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                      <History size={12} /> Sugesti Aktif ({recentProfiles.length})
+                    </span>
+                  )}
+                </div>
                 <input 
                   type="text" 
                   className="form-input"
                   placeholder="Contoh: Dr. Budi Santoso, M.Si"
                   value={formData.nama}
-                  onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
+                  onFocus={() => setShowSuggestions(true)}
+                  onChange={(e) => {
+                    setFormData({ ...formData, nama: e.target.value });
+                    setShowSuggestions(true);
+                  }}
                   required
                 />
+
+                {autofillBadge && (
+                  <div className="autofill-badge">
+                    <UserCheck size={14} /> {autofillBadge}
+                  </div>
+                )}
+
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <div className="suggestions-dropdown">
+                    <div className="suggestions-header">
+                      <span><History size={13} style={{ verticalAlign: 'middle', marginRight: '4px' }} /> Riwayat Tamu di Perangkat Ini</span>
+                      <X size={14} style={{ cursor: 'pointer' }} onClick={() => setShowSuggestions(false)} />
+                    </div>
+                    {filteredSuggestions.map((prof) => (
+                      <div 
+                        key={prof.id} 
+                        className="suggestion-item"
+                        onClick={() => handleSelectSuggestion(prof)}
+                      >
+                        <div className="suggestion-info">
+                          <div className="suggestion-avatar">
+                            {(prof.nama || 'T')[0].toUpperCase()}
+                          </div>
+                          <div className="suggestion-text">
+                            <span className="suggestion-name">{prof.nama}</span>
+                            <span className="suggestion-meta">
+                              🏢 {prof.instansi || 'Instansi Umum'} {prof.noHp ? `• 📱 ${prof.noHp}` : ''}
+                            </span>
+                          </div>
+                        </div>
+                        <button 
+                          type="button" 
+                          className="suggestion-delete-btn"
+                          title="Hapus dari sugesti perangkat ini"
+                          onClick={(e) => handleDeleteSuggestion(e, prof.id)}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+
 
               <div className="form-group">
                 <label className="form-label">
