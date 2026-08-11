@@ -34,6 +34,7 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
     catatan: ''
   });
 
+  const [customTujuan, setCustomTujuan] = useState('');
   const [isDrawing, setIsDrawing] = useState(false);
   const [recentProfiles, setRecentProfiles] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -77,8 +78,13 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
     'Tim Statistik Sosial',
     'Tim Statistik Produksi',
     'Tim Distribusi & Jasa',
-    'Tim Pengolahan & TI'
+    'Tim Pengolahan & TI',
+    'Lainnya'
   ];
+
+  const effectiveTujuan = formData.tujuan === 'Lainnya'
+    ? (customTujuan.trim() || 'Lainnya')
+    : formData.tujuan;
 
   const filteredSuggestions = recentProfiles.filter(p => {
     if (!formData.nama.trim()) return true;
@@ -171,6 +177,11 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
       return;
     }
 
+    if (formData.tujuan === 'Lainnya' && !customTujuan.trim()) {
+      alert('Mohon isi Unit / Pegawai Dituju!');
+      return;
+    }
+
     // Save profile to local storage for quick re-registration suggestions
     const updatedLocals = saveRecentProfile({
       nama: formData.nama,
@@ -191,9 +202,14 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
     const hours = String(now.getHours()).padStart(2, '0');
     const mins = String(now.getMinutes()).padStart(2, '0');
 
+    const finalTujuan = formData.tujuan === 'Lainnya'
+      ? customTujuan.trim()
+      : formData.tujuan;
+
     const newGuest = {
       id: `BPS-PPU-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
       ...formData,
+      tujuan: finalTujuan,
       tanggal: now.toISOString().split('T')[0],
       jamMasuk: `${hours}:${mins} WITA`,
       jamKeluar: '-',
@@ -222,6 +238,7 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
       jumlah: 1,
       catatan: ''
     });
+    setCustomTujuan('');
     clearCanvas();
 
     if (onShowPass) {
@@ -383,12 +400,29 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
                 <select 
                   className="form-select"
                   value={formData.tujuan}
-                  onChange={(e) => setFormData({ ...formData, tujuan: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({ ...formData, tujuan: val });
+                    if (val !== 'Lainnya') {
+                      setCustomTujuan('');
+                    }
+                  }}
                 >
                   {tujuanOptions.map((opt, i) => (
                     <option key={i} value={opt}>{opt}</option>
                   ))}
                 </select>
+                {formData.tujuan === 'Lainnya' && (
+                  <input 
+                    type="text" 
+                    className="form-input"
+                    style={{ marginTop: '0.5rem' }}
+                    placeholder="Tuliskan Unit / Nama Pegawai Dituju..."
+                    value={customTujuan}
+                    onChange={(e) => setCustomTujuan(e.target.value)}
+                    required
+                  />
+                )}
               </div>
 
               <div className="form-group full-width-field-mobile">
@@ -505,7 +539,7 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
             <div style={{ background: 'var(--bps-bg)', padding: '0.85rem', borderRadius: '0px', display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.8rem', border: '1px solid var(--bps-card-border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                 <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Tujuan Unit:</span>
-                <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{formData.tujuan}</span>
+                <span style={{ fontWeight: '800', textAlign: 'right', color: 'var(--text-primary)' }}>{effectiveTujuan}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
                 <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Keperluan:</span>
