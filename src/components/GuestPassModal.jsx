@@ -154,6 +154,9 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
             <div style={{ background: '#f8fafc', padding: '0.85rem', border: '1px solid #e2e8f0' }}>
               <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>NAMA TAMU / PENANGGUNG JAWAB</div>
               <div style={{ fontSize: '1.15rem', fontWeight: '800', color: '#024282' }}>{currentGuest.nama}</div>
+              {currentGuest.nik && currentGuest.nik !== '-' && (
+                <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#64748b' }}>NIK / Identitas: {currentGuest.nik}</div>
+              )}
               <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#475569' }}>Instansi: {currentGuest.instansi}</div>
             </div>
 
@@ -172,6 +175,13 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
               <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>KEPERLUAN KUNJUNGAN</div>
               <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{currentGuest.keperluan}</div>
             </div>
+
+            {currentGuest.catatan && currentGuest.catatan.trim() && currentGuest.catatan !== '-' && (
+              <div style={{ background: '#f8fafc', padding: '0.65rem', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: '800', textTransform: 'uppercase' }}>CATATAN / DETAIL KUNJUNGAN</div>
+                <div style={{ fontWeight: '700', fontSize: '0.85rem', color: '#334155' }}>{currentGuest.catatan}</div>
+              </div>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#e0f2fe', padding: '0.65rem 0.85rem', border: '1px solid #7dd3fc', fontSize: '0.8rem', color: '#0369a1', fontWeight: '700' }}>
               <span>TANGGAL: {currentGuest.tanggal}</span>

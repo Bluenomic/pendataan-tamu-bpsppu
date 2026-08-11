@@ -262,24 +262,33 @@ body {
   background: var(--bps-navy);
   color: #ffffff;
   font-weight: 700;
-  padding: 0.85rem 1rem;
+  padding: 0.65rem 0.5rem;
   border-bottom: 2px solid var(--bps-cyan);
   white-space: nowrap;
   position: sticky;
   top: 0;
   z-index: 10;
-  font-size: 0.8rem;
+  font-size: 0.775rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
 .spreadsheet-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.55rem 0.5rem;
   border-bottom: 1px solid var(--bps-card-border);
   color: var(--text-primary);
   background: var(--bps-card);
   transition: var(--transition-fast);
   vertical-align: middle;
+}
+
+.catatan-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .spreadsheet-table tr:hover td {

@@ -41,6 +41,17 @@ export default function EditGuestModal({ guest, onSave, onClose }) {
             </div>
 
             <div className="form-group">
+              <label className="form-label">NIK / No. Identitas</label>
+              <input 
+                type="text" 
+                className="form-input"
+                value={formData.nik || ''}
+                onChange={(e) => setFormData({ ...formData, nik: e.target.value })}
+                placeholder="6409xxxxxxxxxxxx"
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label">No. HP / WhatsApp</label>
               <input 
                 type="text" 

@@ -220,6 +220,7 @@ export default function ReportModal({ guests, config, onClose }) {
                 <th style={{ border: '1px solid #000', padding: '0.4rem' }}>Instansi / Alamat</th>
                 <th style={{ border: '1px solid #000', padding: '0.4rem' }}>Tujuan Unit</th>
                 <th style={{ border: '1px solid #000', padding: '0.4rem' }}>Keperluan</th>
+                <th style={{ border: '1px solid #000', padding: '0.4rem' }}>Catatan / Detail Kunjungan</th>
                 <th style={{ border: '1px solid #000', padding: '0.4rem', width: '45px', textAlign: 'center' }}>Jml</th>
                 <th style={{ border: '1px solid #000', padding: '0.4rem', width: '60px', textAlign: 'center' }}>Status</th>
               </tr>
@@ -227,7 +228,7 @@ export default function ReportModal({ guests, config, onClose }) {
             <tbody>
               {filteredReportGuests.length === 0 ? (
                 <tr>
-                  <td colSpan="9" style={{ border: '1px solid #000', padding: '1.5rem', textAlign: 'center', color: '#666' }}>
+                  <td colSpan="10" style={{ border: '1px solid #000', padding: '1.5rem', textAlign: 'center', color: '#666' }}>
                     Tidak ada data kunjungan tamu pada periode ini.
                   </td>
                 </tr>
@@ -237,10 +238,16 @@ export default function ReportModal({ guests, config, onClose }) {
                     <td style={{ border: '1px solid #000', padding: '0.35rem', textAlign: 'center' }}>{idx + 1}</td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem' }}>{g.tanggal}</td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem', fontFamily: 'monospace', fontWeight: '700' }}>{g.id}</td>
-                    <td style={{ border: '1px solid #000', padding: '0.35rem', fontWeight: '700' }}>{g.nama}</td>
+                    <td style={{ border: '1px solid #000', padding: '0.35rem' }}>
+                      <div style={{ fontWeight: '700' }}>{g.nama}</div>
+                      {g.nik && g.nik !== '-' && (
+                        <div style={{ fontSize: '0.675rem', color: '#444' }}>NIK: {g.nik}</div>
+                      )}
+                    </td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem' }}>{g.instansi}</td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem' }}>{g.tujuan}</td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem' }}>{g.keperluan}</td>
+                    <td style={{ border: '1px solid #000', padding: '0.35rem' }}>{g.catatan && g.catatan !== '-' ? g.catatan : '-'}</td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem', textAlign: 'center', fontWeight: '700' }}>{g.jumlah || 1}</td>
                     <td style={{ border: '1px solid #000', padding: '0.35rem', textAlign: 'center', fontWeight: '700' }}>{g.status}</td>
                   </tr>

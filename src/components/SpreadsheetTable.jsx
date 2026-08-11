@@ -44,6 +44,19 @@ export default function SpreadsheetTable({
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [previewTtdGuest, setPreviewTtdGuest] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [expandedRowIds, setExpandedRowIds] = useState(new Set());
+
+  const toggleExpandRow = (rowId) => {
+    setExpandedRowIds(prev => {
+      const next = new Set(prev);
+      if (next.has(rowId)) {
+        next.delete(rowId);
+      } else {
+        next.add(rowId);
+      }
+      return next;
+    });
+  };
 
   const activeTodayCount = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -58,7 +71,9 @@ export default function SpreadsheetTable({
         g.instansi.toLowerCase().includes(query) ||
         g.keperluan.toLowerCase().includes(query) ||
         g.tujuan.toLowerCase().includes(query) ||
-        g.id.toLowerCase().includes(query);
+        g.id.toLowerCase().includes(query) ||
+        (g.nik && g.nik.toLowerCase().includes(query)) ||
+        (g.catatan && g.catatan.toLowerCase().includes(query));
 
       const matchesStatus = filterStatus === 'ALL' || g.status === filterStatus;
 
@@ -308,38 +323,39 @@ export default function SpreadsheetTable({
 
       {/* Main Table Grid (no-print) */}
       <div className="table-container glass-panel no-print" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-        <table className="spreadsheet-table" style={{ minWidth: '1000px' }}>
+        <table className="spreadsheet-table" style={{ width: '100%', tableLayout: 'auto' }}>
           <thead>
             <tr>
-              <th style={{ width: '36px', textAlign: 'center' }}>
+              <th style={{ width: '28px', textAlign: 'center', padding: '0.5rem 0.25rem' }}>
                 <button 
                   onClick={toggleSelectAll} 
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff' }}
                 >
                   {selectedIds.length > 0 && selectedIds.length === filteredGuests.length ? (
-                    <CheckSquare size={16} color="#ffffff" />
+                    <CheckSquare size={15} color="#ffffff" />
                   ) : (
-                    <Square size={16} />
+                    <Square size={15} />
                   )}
                 </button>
               </th>
-              <th style={{ width: '36px' }}>No</th>
-              <th style={{ width: '130px' }}>Tanggal & Waktu</th>
-              <th style={{ width: '150px' }}>ID Tamu</th>
-              <th style={{ width: '160px' }}>Nama Tamu</th>
-              <th style={{ width: '160px' }}>Instansi / Alamat</th>
-              <th style={{ width: '150px' }}>Tujuan Unit</th>
-              <th>Keperluan</th>
-              <th style={{ width: '80px', textAlign: 'center' }}>TTD</th>
-              <th style={{ width: '80px', textAlign: 'center' }}>Jumlah</th>
-              <th style={{ textAlign: 'center', width: '120px' }}>Status</th>
-              <th style={{ textAlign: 'center', width: '110px' }}>Aksi</th>
+              <th style={{ width: '28px', padding: '0.5rem 0.25rem' }}>No</th>
+              <th style={{ minWidth: '105px' }}>Tanggal & Waktu</th>
+              <th style={{ minWidth: '110px' }}>ID Tamu</th>
+              <th style={{ minWidth: '130px' }}>Nama Tamu</th>
+              <th style={{ minWidth: '120px' }}>Instansi / Alamat</th>
+              <th style={{ minWidth: '110px' }}>Tujuan Unit</th>
+              <th style={{ minWidth: '120px' }}>Keperluan</th>
+              <th style={{ minWidth: '140px' }}>Catatan / Detail Kunjungan</th>
+              <th style={{ width: '55px', textAlign: 'center' }}>TTD</th>
+              <th style={{ width: '55px', textAlign: 'center' }}>Jumlah</th>
+              <th style={{ textAlign: 'center', width: '85px' }}>Status</th>
+              <th style={{ textAlign: 'center', width: '90px' }}>Aksi</th>
             </tr>
           </thead>
           <tbody>
             {filteredGuests.length === 0 ? (
               <tr>
-                <td colSpan="12" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan="13" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                   <FileSpreadsheet size={40} style={{ display: 'block', margin: '0 auto 0.75rem', opacity: 0.5 }} />
                   Tidak ada data tamu yang sesuai dengan pencarian / filter.
                 </td>
@@ -348,43 +364,112 @@ export default function SpreadsheetTable({
               filteredGuests.map((g, idx) => {
                 const isSelected = selectedIds.includes(g.id);
                 const hasTtd = Boolean(g.ttd && g.ttd.trim());
+                const isRowExpanded = expandedRowIds.has(g.id);
+                const hasCatatan = Boolean(g.catatan && g.catatan.trim() && g.catatan !== '-');
+                
+                // Show button if text exceeds 55 characters (3 lines fit naturally in table row)
+                const isKeperluanLong = (g.keperluan || '').length > 55;
+                const isCatatanLong = hasCatatan && g.catatan.length > 55;
+
                 return (
                   <tr key={g.id} style={{ background: isSelected ? 'rgba(2, 66, 130, 0.12)' : undefined }}>
                     
-                    <td style={{ textAlign: 'center' }}>
+                    <td style={{ textAlign: 'center', padding: '0.5rem 0.25rem' }}>
                       <button 
                         onClick={() => toggleSelectOne(g.id)} 
                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)' }}
                       >
-                        {isSelected ? <CheckSquare size={16} color="var(--bps-navy)" /> : <Square size={16} />}
+                        {isSelected ? <CheckSquare size={15} color="var(--bps-navy)" /> : <Square size={15} />}
                       </button>
                     </td>
 
-                    <td style={{ fontWeight: '600', color: 'var(--text-muted)' }}>{idx + 1}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--text-muted)', padding: '0.5rem 0.25rem' }}>{idx + 1}</td>
 
                     <td>
-                      <div style={{ fontWeight: '700', fontSize: '0.8rem' }}>{g.tanggal}</div>
-                      <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Clock size={11} /> {g.jamMasuk} {g.jamKeluar !== '-' ? `- ${g.jamKeluar}` : ''}
+                      <div style={{ fontWeight: '700', fontSize: '0.775rem' }}>{g.tanggal}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.15rem' }}>
+                        <Clock size={10} /> {g.jamMasuk} {g.jamKeluar !== '-' ? `- ${g.jamKeluar}` : ''}
                       </div>
                     </td>
 
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--bps-navy)', fontWeight: '800' }}>
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.725rem', color: 'var(--bps-navy)', fontWeight: '800' }}>
                       {g.id}
                     </td>
 
                     <td>
-                      <div style={{ fontWeight: '700', fontSize: '0.85rem' }}>{g.nama}</div>
-                      {g.noHp && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>{g.noHp}</div>}
+                      <div style={{ fontWeight: '700', fontSize: '0.825rem' }}>{g.nama}</div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.05rem' }}>
+                        {g.nik && g.nik !== '-' && <span>NIK: {g.nik}</span>}
+                        {g.noHp && g.noHp !== '-' && <span>HP: {g.noHp}</span>}
+                      </div>
                     </td>
 
-                    <td style={{ fontWeight: '600', fontSize: '0.825rem' }}>{g.instansi}</td>
+                    <td style={{ fontWeight: '600', fontSize: '0.8rem' }}>{g.instansi}</td>
 
-                    <td style={{ fontSize: '0.825rem' }}>{g.tujuan}</td>
+                    <td style={{ fontSize: '0.8rem' }}>{g.tujuan}</td>
 
-                    <td style={{ fontSize: '0.825rem' }}>
-                      <div>{g.keperluan}</div>
-                      {g.catatan && <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{g.catatan}"</div>}
+                    <td style={{ fontSize: '0.8rem' }}>
+                      <div 
+                        className={!isRowExpanded && isKeperluanLong ? 'catatan-clamp' : ''} 
+                        title={!isRowExpanded && isKeperluanLong ? g.keperluan : undefined}
+                        style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}
+                      >
+                        {g.keperluan}
+                      </div>
+                      {isKeperluanLong && (
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandRow(g.id)}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--bps-navy)',
+                            fontWeight: '700',
+                            fontSize: '0.7rem',
+                            cursor: 'pointer',
+                            padding: '0.15rem 0 0 0',
+                            textDecoration: 'underline'
+                          }}
+                        >
+                          {isRowExpanded ? 'Sembunyikan' : '... Selengkapnya'}
+                        </button>
+                      )}
+                    </td>
+
+                    <td style={{ fontSize: '0.8rem' }}>
+                      {hasCatatan ? (
+                        <div>
+                          <div 
+                            className={!isRowExpanded && isCatatanLong ? 'catatan-clamp' : ''} 
+                            title={!isRowExpanded && isCatatanLong ? g.catatan : undefined}
+                            style={{ color: 'var(--text-primary)', wordBreak: 'break-word' }}
+                          >
+                            {g.catatan}
+                          </div>
+                          {isCatatanLong && (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpandRow(g.id)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                color: 'var(--bps-navy)',
+                                fontWeight: '700',
+                                fontSize: '0.7rem',
+                                cursor: 'pointer',
+                                padding: '0.15rem 0 0 0',
+                                textDecoration: 'underline'
+                              }}
+                            >
+                              {isRowExpanded ? 'Sembunyikan' : '... Selengkapnya'}
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.75rem' }}>-</span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Digital Signature Preview Button */}

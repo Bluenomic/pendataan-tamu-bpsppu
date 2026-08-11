@@ -237,7 +237,7 @@ export const importFromExcel = (file) => {
           jamMasuk: row['Jam Masuk'] || '08:00 WITA',
           jamKeluar: row['Jam Keluar'] || '-',
           status: row['Status'] || 'Selesai',
-          catatan: row['Catatan'] || 'Diimpor dari Excel',
+          catatan: row['Catatan / Detail Kunjungan'] || row['Catatan Tambahan'] || row['Detail Kunjungan'] || row['Catatan'] || 'Diimpor dari Excel',
           ttd: ''
         }));
 
