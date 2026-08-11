@@ -340,6 +340,7 @@ export default function SpreadsheetTable({
               </th>
               <th style={{ width: '28px', padding: '0.5rem 0.25rem' }}>No</th>
               <th style={{ minWidth: '105px' }}>Tanggal & Waktu</th>
+              <th style={{ minWidth: '85px' }}>No. Antrean</th>
               <th style={{ minWidth: '110px' }}>ID Tamu</th>
               <th style={{ minWidth: '130px' }}>Nama Tamu</th>
               <th style={{ minWidth: '120px' }}>Instansi / Alamat</th>
@@ -355,7 +356,7 @@ export default function SpreadsheetTable({
           <tbody>
             {filteredGuests.length === 0 ? (
               <tr>
-                <td colSpan="13" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <td colSpan="14" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                   <FileSpreadsheet size={40} style={{ display: 'block', margin: '0 auto 0.75rem', opacity: 0.5 }} />
                   Tidak ada data tamu yang sesuai dengan pencarian / filter.
                 </td>
@@ -390,6 +391,21 @@ export default function SpreadsheetTable({
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.15rem' }}>
                         <Clock size={10} /> {g.jamMasuk} {g.jamKeluar !== '-' ? `- ${g.jamKeluar}` : ''}
                       </div>
+                    </td>
+
+                    <td>
+                      <span style={{ 
+                        fontFamily: 'monospace', 
+                        fontWeight: '900', 
+                        fontSize: '0.8rem', 
+                        color: '#024282',
+                        background: '#e0f2fe',
+                        padding: '0.15rem 0.45rem',
+                        border: '1px solid #7dd3fc',
+                        display: 'inline-block'
+                      }}>
+                        {g.noAntrean || '-'}
+                      </span>
                     </td>
 
                     <td style={{ fontFamily: 'monospace', fontSize: '0.725rem', color: 'var(--bps-navy)', fontWeight: '800' }}>

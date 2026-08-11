@@ -4,7 +4,7 @@ import GuestPassModal from '../components/GuestPassModal';
 import PassSelectorModal from '../components/PassSelectorModal';
 import QuickCheckoutQrModal from '../components/QuickCheckoutQrModal';
 import QuickCheckoutSuccessModal from '../components/QuickCheckoutSuccessModal';
-import { saveSingleGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync, checkoutGuestAsync } from '../utils/storage';
+import { saveSingleGuestAsync, syncGuestToGoogleSheets, fetchPassesStatusAsync, checkoutGuestAsync, generateLocalNoAntrean } from '../utils/storage';
 import { Clock, MapPin, Ticket, Layers, QrCode } from 'lucide-react';
 
 const LOCAL_STORAGE_PASSES_KEY = 'bps_ppu_guest_passes_v2';
@@ -204,11 +204,18 @@ export default function PublicKioskPage({ config }) {
   };
 
   const handleAddGuest = async (newGuest) => {
-    // 1. Save to SQLite via public API (backend automatically syncs to Google Sheets once)
-    await saveSingleGuestAsync(newGuest);
+    // 1. Save to SQLite via public API (backend returns noAntrean)
+    const res = await saveSingleGuestAsync(newGuest);
+
+    const guestWithAntrean = {
+      ...newGuest,
+      noAntrean: (res && res.noAntrean) ? res.noAntrean : generateLocalNoAntrean(newGuest.tujuan, myPasses)
+    };
 
     // 2. Save/Update pass to device local storage array
-    saveOrUpdatePassInLocalStorage(newGuest);
+    saveOrUpdatePassInLocalStorage(guestWithAntrean);
+
+    return guestWithAntrean;
   };
 
   // Open pass click handler (Header Top Button Only)

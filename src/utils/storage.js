@@ -2,16 +2,136 @@ import * as XLSX from 'xlsx';
 
 export const INITIAL_GUEST_DATA = [];
 
+export const generateLocalNoAntrean = (tujuan, existingGuests = []) => {
+  const isPST = !tujuan || tujuan.toLowerCase().includes('pelayanan statistik terpadu') || tujuan.toLowerCase().includes('pst');
+  const prefix = isPST ? 'A' : 'B';
+  const today = new Date().toISOString().split('T')[0];
+
+  const todayMatch = existingGuests.filter(g => g.tanggal === today && g.noAntrean && g.noAntrean.startsWith(`${prefix}-`));
+  let highest = 0;
+  todayMatch.forEach(g => {
+    const parts = g.noAntrean.split('-');
+    if (parts.length === 2) {
+      const num = parseInt(parts[1], 10);
+      if (!isNaN(num) && num > highest) highest = num;
+    }
+  });
+
+  return `${prefix}-${String(highest + 1).padStart(3, '0')}`;
+};
+
 export const saveSingleGuestAsync = async (guest) => {
   try {
-    await fetch('/api/public/register', {
+    const response = await fetch('/api/public/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(guest)
     });
+    if (response.ok) {
+      return await response.json();
+    }
   } catch (e) {
     console.error('[Public API] Failed to save guest:', e);
   }
+  return { success: false };
+};
+
+// PUBLIC API: Fetch Today's Queue Status for TV Display & Kiosk Monitor
+export const fetchQueueStatusAsync = async (adminPin = '1234') => {
+  try {
+    const response = await fetch('/api/public/queue/today');
+    if (response.ok) {
+      const resData = await response.json();
+      if (resData.success && Array.isArray(resData.data) && resData.data.length > 0) {
+        const mapped = resData.data.map((g, idx) => ({
+          ...g,
+          noAntrean: g.noAntrean || generateLocalNoAntrean(g.tujuan, resData.data.slice(0, idx)),
+          statusAntrean: g.statusAntrean || 'Menunggu'
+        }));
+        return {
+          ...resData,
+          data: mapped
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('[Public API] Failed to fetch queue status from /api/public/queue/today:', e);
+  }
+
+  // Fallback 1: Fetch active guests from /api/public/active-guests
+  try {
+    const fallbackRes = await fetch('/api/public/active-guests');
+    if (fallbackRes.ok) {
+      const fallbackData = await fallbackRes.json();
+      if (fallbackData.success && Array.isArray(fallbackData.data) && fallbackData.data.length > 0) {
+        const mapped = fallbackData.data.map((g, idx) => ({
+          ...g,
+          noAntrean: g.noAntrean || generateLocalNoAntrean(g.tujuan, fallbackData.data.slice(0, idx)),
+          statusAntrean: g.statusAntrean || 'Menunggu'
+        }));
+        return { success: true, data: mapped, activeCall: null };
+      }
+    }
+  } catch (err) {}
+
+  // Fallback 2: Fetch guests via getGuestDataAsync
+  try {
+    const adminData = await getGuestDataAsync(adminPin);
+    const today = new Date().toISOString().split('T')[0];
+    const todayData = (Array.isArray(adminData) ? adminData : []).filter(g => g.tanggal === today);
+    if (todayData.length > 0) {
+      const mapped = todayData.map((g, idx) => ({
+        ...g,
+        noAntrean: g.noAntrean || generateLocalNoAntrean(g.tujuan, todayData.slice(0, idx)),
+        statusAntrean: g.statusAntrean || 'Menunggu'
+      }));
+      return { success: true, data: mapped, activeCall: null };
+    }
+  } catch (err) {}
+
+  return { success: false, data: [], activeCall: null };
+};
+
+// ADMIN API: Call Next Queue / Call Specific Queue
+export const callQueueAsync = async (params = {}, adminPin) => {
+  if (!adminPin) return { success: false };
+  try {
+    const response = await fetch('/api/admin/queue/call', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': adminPin
+      },
+      body: JSON.stringify(params)
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    console.error('[Admin API] Failed to call queue:', e);
+  }
+  return { success: false };
+};
+
+// ADMIN API: Update Specific Queue Status
+export const updateQueueStatusAsync = async (guestId, statusAntrean, adminPin) => {
+  if (!adminPin || !guestId) return { success: false };
+  try {
+    const response = await fetch('/api/admin/queue/status', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-admin-pin': adminPin
+      },
+      body: JSON.stringify({ guestId, statusAntrean })
+    });
+    if (response.ok) {
+      return await response.json();
+    }
+  } catch (e) {
+    console.error('[Admin API] Failed to update queue status:', e);
+  }
+  return { success: false };
 };
 
 // PUBLIC API: Guest Self Check-Out

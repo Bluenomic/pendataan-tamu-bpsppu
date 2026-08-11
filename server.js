@@ -49,13 +49,72 @@ db.exec(`
   );
 `);
 
-// Migration: Migrate legacy statuses to 2-stage status system ('Proses' & 'Selesai')
+// Migration: Migrate legacy statuses & add Queue system columns
 try {
   db.exec("UPDATE guests SET status = 'Proses' WHERE status IN ('Menunggu', 'Sedang Bertemu')");
   db.exec("DELETE FROM config WHERE key = 'adminPin' AND value LIKE 'admin_token_%'");
 } catch (e) {
   console.warn('[DB Migration] Notice:', e.message);
 }
+
+try {
+  db.exec("ALTER TABLE guests ADD COLUMN noAntrean TEXT");
+} catch (e) {}
+
+try {
+  db.exec("ALTER TABLE guests ADD COLUMN statusAntrean TEXT DEFAULT 'Menunggu'");
+} catch (e) {}
+
+function generateNoAntreanForDate(tanggal, tujuan) {
+  try {
+    const isPST = !tujuan || tujuan.toLowerCase().includes('pelayanan statistik terpadu') || tujuan.toLowerCase().includes('pst');
+    const prefix = isPST ? 'A' : 'B';
+    const prefixPattern = `${prefix}-%`;
+
+    const row = db.prepare(
+      "SELECT noAntrean FROM guests WHERE tanggal = ? AND noAntrean LIKE ? ORDER BY rowid DESC LIMIT 1"
+    ).get(tanggal, prefixPattern);
+
+    let nextNum = 1;
+    if (row && row.noAntrean) {
+      const parts = row.noAntrean.split('-');
+      if (parts.length === 2) {
+        const parsed = parseInt(parts[1], 10);
+        if (!isNaN(parsed)) {
+          nextNum = parsed + 1;
+        }
+      }
+    }
+
+    return `${prefix}-${String(nextNum).padStart(3, '0')}`;
+  } catch (e) {
+    return 'A-001';
+  }
+}
+
+function migrateMissingNoAntrean() {
+  try {
+    const unnumberedGuests = db.prepare(
+      "SELECT id, tanggal, tujuan FROM guests WHERE noAntrean IS NULL OR noAntrean = '' ORDER BY rowid ASC"
+    ).all();
+
+    if (unnumberedGuests.length > 0) {
+      const updateStmt = db.prepare("UPDATE guests SET noAntrean = ?, statusAntrean = 'Menunggu' WHERE id = ?");
+      const transaction = db.transaction((list) => {
+        for (const g of list) {
+          const generatedNo = generateNoAntreanForDate(g.tanggal, g.tujuan);
+          updateStmt.run(generatedNo, g.id);
+        }
+      });
+      transaction(unnumberedGuests);
+      console.log(`[DB Migration] Auto-assigned noAntrean for ${unnumberedGuests.length} existing guest record(s).`);
+    }
+  } catch (e) {
+    console.error('[DB Migration Error]:', e.message);
+  }
+}
+
+migrateMissingNoAntrean();
 
 function getAdminPinFromDb() {
   try {
@@ -179,26 +238,33 @@ app.post('/api/public/register', (req, res) => {
     }
 
     const guestId = guest.id || `BPS-PPU-${Date.now()}`;
+    const tanggal = guest.tanggal || new Date().toISOString().split('T')[0];
+    const tujuan = guest.tujuan || 'Pelayanan Statistik Terpadu (PST)';
+    const noAntrean = guest.noAntrean || generateNoAntreanForDate(tanggal, tujuan);
+    const statusAntrean = guest.statusAntrean || 'Menunggu';
+
     const guestData = {
       id: guestId,
       nama: guest.nama,
       noHp: guest.noHp || '-',
       instansi: guest.instansi,
       nik: guest.nik || '-',
-      tujuan: guest.tujuan || 'Pelayanan Statistik Terpadu (PST)',
+      tujuan: tujuan,
       keperluan: guest.keperluan || 'Kunjungan',
       jumlah: parseInt(guest.jumlah || '1', 10),
-      tanggal: guest.tanggal || new Date().toISOString().split('T')[0],
+      tanggal: tanggal,
       jamMasuk: guest.jamMasuk || '08:00 WITA',
       jamKeluar: guest.jamKeluar || '-',
       status: 'Proses',
       catatan: guest.catatan || '',
-      ttd: guest.ttd || ''
+      ttd: guest.ttd || '',
+      noAntrean: noAntrean,
+      statusAntrean: statusAntrean
     };
 
     const insertStmt = db.prepare(`
-      INSERT INTO guests (id, nama, noHp, instansi, nik, tujuan, keperluan, jumlah, tanggal, jamMasuk, jamKeluar, status, catatan, ttd)
-      VALUES (@id, @nama, @noHp, @instansi, @nik, @tujuan, @keperluan, @jumlah, @tanggal, @jamMasuk, @jamKeluar, @status, @catatan, @ttd)
+      INSERT INTO guests (id, nama, noHp, instansi, nik, tujuan, keperluan, jumlah, tanggal, jamMasuk, jamKeluar, status, catatan, ttd, noAntrean, statusAntrean)
+      VALUES (@id, @nama, @noHp, @instansi, @nik, @tujuan, @keperluan, @jumlah, @tanggal, @jamMasuk, @jamKeluar, @status, @catatan, @ttd, @noAntrean, @statusAntrean)
     `);
 
     insertStmt.run(guestData);
@@ -206,7 +272,7 @@ app.post('/api/public/register', (req, res) => {
     // Live Sync to Google Sheets automatically from server!
     syncToGoogleSheetsServer({ ...guestData, jumlah: String(guestData.jumlah) });
 
-    res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan ke SQLite DB.' });
+    res.json({ success: true, message: 'Pendaftaran tamu berhasil disimpan ke SQLite DB.', noAntrean: guestData.noAntrean, guest: guestData });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -276,8 +342,92 @@ app.post('/api/public/passes-status', (req, res) => {
       return res.json({ success: true, data: [] });
     }
     const placeholders = ids.map(() => '?').join(',');
-    const guests = db.prepare(`SELECT id, status, jamKeluar FROM guests WHERE id IN (${placeholders})`).all(...ids);
+    const guests = db.prepare(`SELECT id, status, jamKeluar, noAntrean, statusAntrean FROM guests WHERE id IN (${placeholders})`).all(...ids);
     res.json({ success: true, data: guests });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// PUBLIC API: Get Today's Queue Status for TV Display & Kiosk Monitor
+app.get('/api/public/queue/today', (req, res) => {
+  try {
+    migrateMissingNoAntrean();
+    const today = new Date().toISOString().split('T')[0];
+    const guests = db.prepare(
+      "SELECT id, nama, instansi, tujuan, noAntrean, statusAntrean, status, jamMasuk FROM guests WHERE tanggal = ? ORDER BY rowid ASC"
+    ).all(today);
+
+    const activeCallRow = db.prepare(
+      "SELECT value FROM config WHERE key = 'active_queue_call'"
+    ).get();
+
+    let activeCall = null;
+    if (activeCallRow && activeCallRow.value) {
+      try {
+        activeCall = JSON.parse(activeCallRow.value);
+      } catch (e) {}
+    }
+
+    res.json({
+      success: true,
+      data: guests,
+      activeCall
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ADMIN API: Call Next Queue / Call Specific Queue
+app.post('/api/admin/queue/call', verifyAdminPinMiddleware, (req, res) => {
+  try {
+    const { guestId, noAntrean } = req.body;
+    let targetGuest = null;
+
+    if (guestId) {
+      targetGuest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId);
+    } else if (noAntrean) {
+      const today = new Date().toISOString().split('T')[0];
+      targetGuest = db.prepare("SELECT * FROM guests WHERE noAntrean = ? AND tanggal = ?").get(noAntrean, today);
+    } else {
+      const today = new Date().toISOString().split('T')[0];
+      targetGuest = db.prepare("SELECT * FROM guests WHERE tanggal = ? AND (statusAntrean IS NULL OR statusAntrean = 'Menunggu') AND status != 'Selesai' ORDER BY rowid ASC LIMIT 1").get(today);
+    }
+
+    if (!targetGuest) {
+      return res.status(404).json({ success: false, error: 'Tidak ada antrean yang dapat dipanggil saat ini.' });
+    }
+
+    // Update statusAntrean to 'Dipanggil'
+    db.prepare("UPDATE guests SET statusAntrean = 'Dipanggil' WHERE id = ?").run(targetGuest.id);
+
+    const callPayload = {
+      id: targetGuest.id,
+      noAntrean: targetGuest.noAntrean,
+      nama: targetGuest.nama,
+      tujuan: targetGuest.tujuan,
+      timestamp: Date.now()
+    };
+
+    db.prepare("INSERT OR REPLACE INTO config (key, value) VALUES ('active_queue_call', ?)").run(JSON.stringify(callPayload));
+
+    res.json({ success: true, message: 'Antrean berhasil dipanggil.', callPayload, guest: targetGuest });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ADMIN API: Update Specific Queue Status ('Sedang Dilayani', 'Selesai', 'Lewat', 'Menunggu')
+app.post('/api/admin/queue/status', verifyAdminPinMiddleware, (req, res) => {
+  try {
+    const { guestId, statusAntrean } = req.body;
+    if (!guestId || !statusAntrean) {
+      return res.status(400).json({ success: false, error: 'guestId dan statusAntrean wajib diisi.' });
+    }
+
+    db.prepare("UPDATE guests SET statusAntrean = ? WHERE id = ?").run(statusAntrean, guestId);
+    res.json({ success: true, message: 'Status antrean berhasil diperbarui.' });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

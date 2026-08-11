@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SpreadsheetTable from '../components/SpreadsheetTable';
 import AnalyticsView from '../components/AnalyticsView';
+import QueueControlView from '../components/QueueControlView';
 import GoogleSheetsModal from '../components/GoogleSheetsModal';
 import GuestPassModal from '../components/GuestPassModal';
 import EditGuestModal from '../components/EditGuestModal';
@@ -33,7 +34,8 @@ import {
   Sun,
   Moon,
   ExternalLink,
-  QrCode
+  QrCode,
+  Volume2
 } from 'lucide-react';
 
 const SESSION_KEY = 'bps_ppu_admin_session_v1';
@@ -370,6 +372,14 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
               </button>
 
               <button 
+                className={`bps-tab-btn ${activeTab === 'queue' ? 'active' : ''}`}
+                onClick={() => setActiveTab('queue')}
+              >
+                <Volume2 size={16} />
+                <span>Kontrol Antrean</span>
+              </button>
+
+              <button 
                 className={`bps-tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
                 onClick={() => setActiveTab('analytics')}
               >
@@ -470,6 +480,13 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
             onShowPass={(guest) => setSelectedPassGuest(guest)}
             onEditGuest={(guest) => setEditingGuest(guest)}
             onAddNewManual={handleAddNewManual}
+          />
+        )}
+
+        {activeTab === 'queue' && (
+          <QueueControlView 
+            adminPin={sessionToken || currentAdminPin}
+            onOpenTvDisplay={() => window.open('/?view=display', '_blank')}
           />
         )}
 

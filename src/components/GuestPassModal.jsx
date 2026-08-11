@@ -148,6 +148,24 @@ export default function GuestPassModal({ guest, officeName, onClose, config, onU
             </div>
           </div>
 
+          {/* Queue Number Badge */}
+          {currentGuest.noAntrean && (
+            <div style={{ background: '#e0f2fe', padding: '0.75rem 1rem', border: '1.5px solid #0284c7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+              <div>
+                <div style={{ fontSize: '0.7rem', color: '#0369a1', fontWeight: '800', textTransform: 'uppercase' }}>NOMOR ANTREAN PELAYANAN</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#024282', fontFamily: 'monospace', lineHeight: 1.1 }}>
+                  {currentGuest.noAntrean}
+                </div>
+              </div>
+              <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#0369a1', fontWeight: '700' }}>
+                <div>Status Antrean:</div>
+                <div style={{ fontWeight: '900', color: currentGuest.statusAntrean === 'Dipanggil' ? '#16a34a' : '#0284c7', fontSize: '0.85rem' }}>
+                  {currentGuest.statusAntrean || 'Menunggu'}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Guest Info Details */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', fontSize: '0.9rem', color: '#334155' }}>
             

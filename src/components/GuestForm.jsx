@@ -20,7 +20,7 @@ import {
   X
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { getRecentProfiles, saveRecentProfile, deleteRecentProfile } from '../utils/storage';
+import { getRecentProfiles, saveRecentProfile, deleteRecentProfile, generateLocalNoAntrean } from '../utils/storage';
 
 export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
   const [formData, setFormData] = useState({
@@ -206,10 +206,14 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
       ? customTujuan.trim()
       : formData.tujuan;
 
+    const preGeneratedNoAntrean = generateLocalNoAntrean(finalTujuan, recentProfiles);
+
     const newGuest = {
       id: `BPS-PPU-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
       ...formData,
       tujuan: finalTujuan,
+      noAntrean: preGeneratedNoAntrean,
+      statusAntrean: 'Menunggu',
       tanggal: now.toISOString().split('T')[0],
       jamMasuk: `${hours}:${mins} WITA`,
       jamKeluar: '-',
@@ -226,24 +230,34 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
       });
     } catch (err) {}
 
-    onAddGuest(newGuest);
+    const processSubmit = async () => {
+      let savedResult = newGuest;
+      if (onAddGuest) {
+        const res = await onAddGuest(newGuest);
+        if (res && res.noAntrean) {
+          savedResult = res;
+        }
+      }
 
-    setFormData({
-      nama: '',
-      noHp: '',
-      instansi: '',
-      nik: '',
-      tujuan: 'Pelayanan Statistik Terpadu (PST)',
-      keperluan: 'Konsultasi Data & Informasi Statistik',
-      jumlah: 1,
-      catatan: ''
-    });
-    setCustomTujuan('');
-    clearCanvas();
+      setFormData({
+        nama: '',
+        noHp: '',
+        instansi: '',
+        nik: '',
+        tujuan: 'Pelayanan Statistik Terpadu (PST)',
+        keperluan: 'Konsultasi Data & Informasi Statistik',
+        jumlah: 1,
+        catatan: ''
+      });
+      setCustomTujuan('');
+      clearCanvas();
 
-    if (onShowPass) {
-      onShowPass(newGuest);
-    }
+      if (onShowPass) {
+        onShowPass(savedResult);
+      }
+    };
+
+    processSubmit();
   };
 
   return (
@@ -534,6 +548,13 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.2rem 0 0.75rem', fontWeight: '600', wordBreak: 'break-word' }}>
                 {formData.instansi || 'Instansi / Perusahaan'}
               </p>
+
+              <div style={{ background: '#e0f2fe', padding: '0.5rem 0.75rem', border: '1.5px solid #0284c7', display: 'inline-block', width: '100%', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.65rem', color: '#0369a1', fontWeight: '800', textTransform: 'uppercase' }}>ESTIMASI NOMOR ANTREAN</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#024282', fontFamily: 'monospace', lineHeight: 1.1 }}>
+                  {generateLocalNoAntrean(effectiveTujuan, recentProfiles)}
+                </div>
+              </div>
             </div>
 
             <div style={{ background: 'var(--bps-bg)', padding: '0.85rem', borderRadius: '0px', display: 'flex', flexDirection: 'column', gap: '0.55rem', fontSize: '0.8rem', border: '1px solid var(--bps-card-border)' }}>

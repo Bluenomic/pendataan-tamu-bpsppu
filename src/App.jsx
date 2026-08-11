@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import PublicKioskPage from './pages/PublicKioskPage';
 import AdminPage from './pages/AdminPage';
+import QueueDisplayPage from './pages/QueueDisplayPage';
 import { getAppConfigAsync, saveAppConfigAsync } from './utils/storage';
 
 export default function App() {
   const [theme, setTheme] = useState('light');
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentSearch, setCurrentSearch] = useState(window.location.search);
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
+
   const [config, setConfig] = useState({
     officeName: 'Badan Pusat Statistik Kabupaten Penajam Paser Utara',
     subTitle: 'Pelayanan Statistik Terpadu (PST BPS PPU)',
@@ -20,6 +24,8 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       setCurrentPath(window.location.pathname);
+      setCurrentSearch(window.location.search);
+      setCurrentHash(window.location.hash);
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
@@ -48,8 +54,23 @@ export default function App() {
     await saveAppConfigAsync(newConfig);
   };
 
-  // Route Decision: /admin renders Admin Page, everything else renders Public Kiosk
-  const isAdminRoute = currentPath.startsWith('/admin') || window.location.hash.startsWith('#/admin');
+  // Route Decision: /display renders Queue TV Display Monitor
+  const isDisplayRoute = currentPath.startsWith('/display') || currentHash.startsWith('#/display') || currentSearch.includes('view=display');
+  const isAdminRoute = currentPath.startsWith('/admin') || currentHash.startsWith('#/admin');
+
+  if (isDisplayRoute) {
+    return (
+      <QueueDisplayPage 
+        config={config}
+        onBack={() => {
+          window.history.pushState({}, '', '/');
+          setCurrentPath('/');
+          setCurrentSearch('');
+          setCurrentHash('');
+        }}
+      />
+    );
+  }
 
   if (isAdminRoute) {
     return (
