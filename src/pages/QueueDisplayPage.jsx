@@ -232,7 +232,7 @@ export default function QueueDisplayPage({ config, onBack }) {
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
-              justify: 'space-between', 
+              justifyContent: 'space-between', 
               paddingBottom: '0.85rem', 
               borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
               marginBottom: '1.25rem'
@@ -253,20 +253,18 @@ export default function QueueDisplayPage({ config, onBack }) {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '420px', overflowY: 'auto' }}>
-                {waitingQueue.slice(0, 5).map((item, idx) => (
+                {waitingQueue.slice(0, 3).map((item, idx) => (
                   <div 
                     key={item.id || idx}
                     style={{ 
+                      position: 'relative',
                       background: 'rgba(255, 255, 255, 0.08)', 
                       borderLeft: '4px solid #38bdf8', 
                       padding: '0.85rem 1.15rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justify: 'space-between',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
                     }}
                   >
-                    <div>
+                    <div style={{ paddingRight: '6.5rem' }}>
                       <div style={{ fontSize: '1.45rem', fontWeight: '900', color: '#ffffff', fontFamily: 'monospace' }}>
                         {item.noAntrean || '-'}
                       </div>
@@ -277,7 +275,17 @@ export default function QueueDisplayPage({ config, onBack }) {
                         🏢 {item.instansi} • {item.tujuan}
                       </div>
                     </div>
-                    <span style={{ background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '0.25rem 0.6rem', fontSize: '0.75rem', fontWeight: '800' }}>
+                    <span style={{ 
+                      position: 'absolute', 
+                      top: '0.85rem', 
+                      right: '1.15rem',
+                      background: 'rgba(56, 189, 248, 0.15)', 
+                      color: '#38bdf8', 
+                      border: '1px solid rgba(56, 189, 248, 0.3)', 
+                      padding: '0.25rem 0.6rem', 
+                      fontSize: '0.75rem', 
+                      fontWeight: '800' 
+                    }}>
                       Urutan #{idx + 1}
                     </span>
                   </div>
