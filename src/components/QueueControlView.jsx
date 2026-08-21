@@ -33,9 +33,7 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
       if (Array.isArray(res.data)) {
         setQueueList(res.data);
       }
-      if (res.activeCall) {
-        setActiveCall(res.activeCall);
-      }
+      setActiveCall(res.activeCall || null);
     }
   };
 
@@ -136,9 +134,8 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
   };
 
   const filteredList = queueList.filter(item => {
-    if (filterCategory === 'A') return item.noAntrean && item.noAntrean.startsWith('A-');
-    if (filterCategory === 'B') return item.noAntrean && item.noAntrean.startsWith('B-');
     if (filterCategory === 'WAITING') return item.statusAntrean === 'Menunggu' || !item.statusAntrean;
+    if (filterCategory === 'CALLED') return item.statusAntrean === 'Dipanggil';
     if (filterCategory === 'DONE') return item.statusAntrean === 'Selesai' || item.status === 'Selesai';
     return true;
   });
@@ -182,7 +179,7 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
               className="btn btn-secondary btn-sm"
               onClick={() => {
                 unlockAudioContext();
-                announceQueueCall('A-001', 'Pelayanan Statistik Terpadu');
+                announceQueueCall('001', 'Pelayanan Statistik Terpadu');
               }}
             >
               🔊 Tes Suara
@@ -322,16 +319,10 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
               Menunggu ({waitingCount})
             </button>
             <button 
-              className={`btn btn-sm ${filterCategory === 'A' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setFilterCategory('A')}
+              className={`btn btn-sm ${filterCategory === 'CALLED' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setFilterCategory('CALLED')}
             >
-              Kategori PST (A)
-            </button>
-            <button 
-              className={`btn btn-sm ${filterCategory === 'B' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => setFilterCategory('B')}
-            >
-              Non-PST / Lainnya (B)
+              Dipanggil ({calledCount})
             </button>
             <button 
               className={`btn btn-sm ${filterCategory === 'DONE' ? 'btn-primary' : 'btn-secondary'}`}

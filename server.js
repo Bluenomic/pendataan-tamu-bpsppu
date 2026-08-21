@@ -53,6 +53,8 @@ db.exec(`
 try {
   db.exec("UPDATE guests SET status = 'Proses' WHERE status IN ('Menunggu', 'Sedang Bertemu')");
   db.exec("DELETE FROM config WHERE key = 'adminPin' AND value LIKE 'admin_token_%'");
+  const nowStr = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')} WITA`;
+  db.exec(`UPDATE guests SET status = 'Selesai', jamKeluar = CASE WHEN jamKeluar IS NULL OR jamKeluar = '-' THEN '${nowStr}' ELSE jamKeluar END WHERE statusAntrean = 'Selesai' AND status != 'Selesai'`);
 } catch (e) {
   console.warn('[DB Migration] Notice:', e.message);
 }
@@ -65,49 +67,62 @@ try {
   db.exec("ALTER TABLE guests ADD COLUMN statusAntrean TEXT DEFAULT 'Menunggu'");
 } catch (e) {}
 
-function generateNoAntreanForDate(tanggal, tujuan) {
+function generateNoAntreanForDate(tanggal) {
   try {
-    const isPST = !tujuan || tujuan.toLowerCase().includes('pelayanan statistik terpadu') || tujuan.toLowerCase().includes('pst');
-    const prefix = isPST ? 'A' : 'B';
-    const prefixPattern = `${prefix}-%`;
+    const rows = db.prepare(
+      "SELECT noAntrean FROM guests WHERE tanggal = ?"
+    ).all(tanggal);
 
-    const row = db.prepare(
-      "SELECT noAntrean FROM guests WHERE tanggal = ? AND noAntrean LIKE ? ORDER BY rowid DESC LIMIT 1"
-    ).get(tanggal, prefixPattern);
-
-    let nextNum = 1;
-    if (row && row.noAntrean) {
-      const parts = row.noAntrean.split('-');
-      if (parts.length === 2) {
-        const parsed = parseInt(parts[1], 10);
-        if (!isNaN(parsed)) {
-          nextNum = parsed + 1;
+    let maxNum = 0;
+    for (const r of rows) {
+      if (r.noAntrean) {
+        const cleaned = r.noAntrean.replace(/[^0-9]/g, '');
+        if (cleaned) {
+          const num = parseInt(cleaned, 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
         }
       }
     }
 
-    return `${prefix}-${String(nextNum).padStart(3, '0')}`;
+    return String(maxNum + 1).padStart(3, '0');
   } catch (e) {
-    return 'A-001';
+    return '001';
   }
 }
 
 function migrateMissingNoAntrean() {
   try {
     const unnumberedGuests = db.prepare(
-      "SELECT id, tanggal, tujuan FROM guests WHERE noAntrean IS NULL OR noAntrean = '' ORDER BY rowid ASC"
+      "SELECT id, tanggal FROM guests WHERE noAntrean IS NULL OR noAntrean = '' ORDER BY rowid ASC"
     ).all();
 
     if (unnumberedGuests.length > 0) {
       const updateStmt = db.prepare("UPDATE guests SET noAntrean = ?, statusAntrean = 'Menunggu' WHERE id = ?");
       const transaction = db.transaction((list) => {
         for (const g of list) {
-          const generatedNo = generateNoAntreanForDate(g.tanggal, g.tujuan);
+          const generatedNo = generateNoAntreanForDate(g.tanggal);
           updateStmt.run(generatedNo, g.id);
         }
       });
       transaction(unnumberedGuests);
-      console.log(`[DB Migration] Auto-assigned noAntrean for ${unnumberedGuests.length} existing guest record(s).`);
+    }
+
+    const prefixedGuests = db.prepare(
+      "SELECT id, noAntrean FROM guests WHERE noAntrean LIKE '%-%' OR noAntrean GLOB '*[A-Za-z]*'"
+    ).all();
+
+    if (prefixedGuests.length > 0) {
+      const updateCleanStmt = db.prepare("UPDATE guests SET noAntrean = ? WHERE id = ?");
+      const transactionClean = db.transaction((list) => {
+        for (const g of list) {
+          const cleaned = g.noAntrean.replace(/[^0-9]/g, '');
+          const padded = cleaned ? String(parseInt(cleaned, 10)).padStart(3, '0') : '001';
+          updateCleanStmt.run(padded, g.id);
+        }
+      });
+      transactionClean(prefixedGuests);
     }
   } catch (e) {
     console.error('[DB Migration Error]:', e.message);
@@ -240,7 +255,7 @@ app.post('/api/public/register', (req, res) => {
     const guestId = guest.id || `BPS-PPU-${Date.now()}`;
     const tanggal = guest.tanggal || new Date().toISOString().split('T')[0];
     const tujuan = guest.tujuan || 'Pelayanan Statistik Terpadu (PST)';
-    const noAntrean = guest.noAntrean || generateNoAntreanForDate(tanggal, tujuan);
+    const noAntrean = (guest.isCustomNoAntrean && guest.noAntrean) ? guest.noAntrean : generateNoAntreanForDate(tanggal);
     const statusAntrean = guest.statusAntrean || 'Menunggu';
 
     const guestData = {
@@ -365,7 +380,17 @@ app.get('/api/public/queue/today', (req, res) => {
     let activeCall = null;
     if (activeCallRow && activeCallRow.value) {
       try {
-        activeCall = JSON.parse(activeCallRow.value);
+        const parsed = JSON.parse(activeCallRow.value);
+        const matchedGuest = guests.find(g => g.id === parsed.id);
+        if (matchedGuest) {
+          activeCall = {
+            ...parsed,
+            noAntrean: matchedGuest.noAntrean,
+            nama: matchedGuest.nama,
+            tujuan: matchedGuest.tujuan,
+            statusAntrean: matchedGuest.statusAntrean
+          };
+        }
       } catch (e) {}
     }
 
@@ -426,8 +451,39 @@ app.post('/api/admin/queue/status', verifyAdminPinMiddleware, (req, res) => {
       return res.status(400).json({ success: false, error: 'guestId dan statusAntrean wajib diisi.' });
     }
 
-    db.prepare("UPDATE guests SET statusAntrean = ? WHERE id = ?").run(statusAntrean, guestId);
-    res.json({ success: true, message: 'Status antrean berhasil diperbarui.' });
+    if (statusAntrean === 'Selesai') {
+      const now = new Date();
+      const jamKeluar = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} WITA`;
+      
+      db.prepare(`
+        UPDATE guests 
+        SET statusAntrean = ?, 
+            status = 'Selesai', 
+            jamKeluar = CASE WHEN jamKeluar IS NULL OR jamKeluar = '-' THEN ? ELSE jamKeluar END 
+        WHERE id = ?
+      `).run(statusAntrean, jamKeluar, guestId);
+
+      // If active call was this guest, remove active_queue_call from config
+      const activeCallRow = db.prepare("SELECT value FROM config WHERE key = 'active_queue_call'").get();
+      if (activeCallRow && activeCallRow.value) {
+        try {
+          const parsed = JSON.parse(activeCallRow.value);
+          if (parsed.id === guestId) {
+            db.prepare("DELETE FROM config WHERE key = 'active_queue_call'").run();
+          }
+        } catch (e) {}
+      }
+    } else {
+      db.prepare("UPDATE guests SET statusAntrean = ? WHERE id = ?").run(statusAntrean, guestId);
+    }
+
+    // Sync updated guest data to Google Sheets automatically!
+    const updatedGuest = db.prepare("SELECT * FROM guests WHERE id = ?").get(guestId);
+    if (updatedGuest) {
+      syncToGoogleSheetsServer({ ...updatedGuest, jumlah: String(updatedGuest.jumlah) });
+    }
+
+    res.json({ success: true, message: 'Status antrean dan status kunjungan berhasil diperbarui.', guest: updatedGuest });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

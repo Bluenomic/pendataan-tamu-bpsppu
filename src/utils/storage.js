@@ -3,21 +3,20 @@ import * as XLSX from 'xlsx';
 export const INITIAL_GUEST_DATA = [];
 
 export const generateLocalNoAntrean = (tujuan, existingGuests = []) => {
-  const isPST = !tujuan || tujuan.toLowerCase().includes('pelayanan statistik terpadu') || tujuan.toLowerCase().includes('pst');
-  const prefix = isPST ? 'A' : 'B';
   const today = new Date().toISOString().split('T')[0];
+  const list = Array.isArray(tujuan) ? tujuan : existingGuests;
 
-  const todayMatch = existingGuests.filter(g => g.tanggal === today && g.noAntrean && g.noAntrean.startsWith(`${prefix}-`));
+  const todayMatch = list.filter(g => g.tanggal === today && g.noAntrean);
   let highest = 0;
   todayMatch.forEach(g => {
-    const parts = g.noAntrean.split('-');
-    if (parts.length === 2) {
-      const num = parseInt(parts[1], 10);
+    const cleaned = String(g.noAntrean).replace(/[^0-9]/g, '');
+    if (cleaned) {
+      const num = parseInt(cleaned, 10);
       if (!isNaN(num) && num > highest) highest = num;
     }
   });
 
-  return `${prefix}-${String(highest + 1).padStart(3, '0')}`;
+  return String(highest + 1).padStart(3, '0');
 };
 
 export const saveSingleGuestAsync = async (guest) => {

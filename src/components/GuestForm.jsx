@@ -206,13 +206,10 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
       ? customTujuan.trim()
       : formData.tujuan;
 
-    const preGeneratedNoAntrean = generateLocalNoAntrean(finalTujuan, recentProfiles);
-
     const newGuest = {
       id: `BPS-PPU-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-${Math.floor(1000 + Math.random() * 9000)}`,
       ...formData,
       tujuan: finalTujuan,
-      noAntrean: preGeneratedNoAntrean,
       statusAntrean: 'Menunggu',
       tanggal: now.toISOString().split('T')[0],
       jamMasuk: `${hours}:${mins} WITA`,
@@ -550,9 +547,9 @@ export default function GuestForm({ onAddGuest, onShowPass, onOpenCheckout }) {
               </p>
 
               <div style={{ background: '#e0f2fe', padding: '0.5rem 0.75rem', border: '1.5px solid #0284c7', display: 'inline-block', width: '100%', marginTop: '0.25rem' }}>
-                <div style={{ fontSize: '0.65rem', color: '#0369a1', fontWeight: '800', textTransform: 'uppercase' }}>ESTIMASI NOMOR ANTREAN</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '900', color: '#024282', fontFamily: 'monospace', lineHeight: 1.1 }}>
-                  {generateLocalNoAntrean(effectiveTujuan, recentProfiles)}
+                <div style={{ fontSize: '0.65rem', color: '#0369a1', fontWeight: '800', textTransform: 'uppercase' }}>NOMOR ANTREAN PELAYANAN</div>
+                <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#024282', fontFamily: 'monospace', lineHeight: 1.1 }}>
+                  Diterbitkan Otomatis
                 </div>
               </div>
             </div>

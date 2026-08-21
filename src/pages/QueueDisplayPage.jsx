@@ -71,6 +71,8 @@ export default function QueueDisplayPage({ config, onBack }) {
             }
             lastCalledIdRef.current = currentCallId;
           }
+        } else {
+          setActiveCall(null);
         }
       }
     };
@@ -94,7 +96,7 @@ export default function QueueDisplayPage({ config, onBack }) {
 
   const handleTestSound = async () => {
     await playChimeSound();
-    announceQueueCall('A-001', 'Pelayanan Statistik Terpadu');
+    announceQueueCall('001', 'Pelayanan Statistik Terpadu');
   };
 
   return (

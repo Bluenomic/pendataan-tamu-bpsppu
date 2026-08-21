@@ -124,29 +124,32 @@ export function playChimeSound() {
 export function formatQueueNumberForSpeech(noAntrean) {
   if (!noAntrean) return '';
   const clean = String(noAntrean).trim().toUpperCase();
-  const parts = clean.split('-');
 
+  const mapDigit = (digit) => {
+    switch (digit) {
+      case '0': return 'nol';
+      case '1': return 'satu';
+      case '2': return 'dua';
+      case '3': return 'tiga';
+      case '4': return 'empat';
+      case '5': return 'lima';
+      case '6': return 'enam';
+      case '7': return 'tujuh';
+      case '8': return 'delapan';
+      case '9': return 'sembilan';
+      default: return digit;
+    }
+  };
+
+  const parts = clean.split('-');
   if (parts.length === 2) {
     const prefix = parts[0];
-    const numDigits = parts[1].split('').map(digit => {
-      switch (digit) {
-        case '0': return 'nol';
-        case '1': return 'satu';
-        case '2': return 'dua';
-        case '3': return 'tiga';
-        case '4': return 'empat';
-        case '5': return 'lima';
-        case '6': return 'enam';
-        case '7': return 'tujuh';
-        case '8': return 'delapan';
-        case '9': return 'sembilan';
-        default: return digit;
-      }
-    }).join('. ');
+    const numDigits = parts[1].split('').map(mapDigit).join('. ');
     return `Nomor antrean ${prefix}. ${numDigits}`;
   }
 
-  return `Nomor antrean ${clean}`;
+  const numDigits = clean.split('').map(mapDigit).join('. ');
+  return `Nomor antrean ${numDigits}`;
 }
 
 // Announce Queue Call with Chime + Voice Synthesis
