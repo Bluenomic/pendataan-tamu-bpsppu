@@ -487,6 +487,10 @@ export default function AdminPage({ config, onSaveConfig, theme, toggleTheme }) 
           <QueueControlView 
             adminPin={sessionToken || currentAdminPin}
             onOpenTvDisplay={() => window.open('/?view=display', '_blank')}
+            onRefreshData={async () => {
+              const latest = await getGuestDataAsync(getAuthHeaderKey());
+              if (Array.isArray(latest)) setGuests(latest);
+            }}
           />
         )}
 

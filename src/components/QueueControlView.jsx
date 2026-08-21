@@ -18,7 +18,7 @@ import {
 import { fetchQueueStatusAsync, callQueueAsync, updateQueueStatusAsync } from '../utils/storage';
 import { announceQueueCall, playChimeSound, unlockAudioContext, getIndonesianVoiceInfo } from '../utils/audioAnnouncer';
 
-export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
+export default function QueueControlView({ adminPin, onOpenTvDisplay, onRefreshData }) {
   const [queueList, setQueueList] = useState([]);
   const [activeCall, setActiveCall] = useState(null);
   const [filterCategory, setFilterCategory] = useState('ALL'); // 'ALL' | 'A' | 'B' | 'WAITING' | 'DONE'
@@ -85,6 +85,7 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
     await callQueueAsync({ guestId: nextWaiting.id }, adminPin);
     setIsLoading(false);
     loadQueueData();
+    if (onRefreshData) onRefreshData();
   };
 
   const handleRecall = () => {
@@ -122,6 +123,7 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
     await callQueueAsync({ guestId: guest.id }, adminPin);
     setIsLoading(false);
     loadQueueData();
+    if (onRefreshData) onRefreshData();
   };
 
   const handleUpdateStatus = async (guestId, newStatus) => {
@@ -130,6 +132,7 @@ export default function QueueControlView({ adminPin, onOpenTvDisplay }) {
     if (res && res.success) {
       showNotification(`Status antrean diperbarui menjadi: ${newStatus}`);
       loadQueueData();
+      if (onRefreshData) onRefreshData();
     }
   };
 
