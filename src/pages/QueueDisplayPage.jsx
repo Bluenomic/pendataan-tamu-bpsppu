@@ -195,17 +195,6 @@ export default function QueueDisplayPage({ config, onBack }) {
           </div>
 
           <div style={{ 
-            fontSize: '1.85rem', 
-            fontWeight: '800', 
-            color: '#ffffff', 
-            marginBottom: '0.5rem',
-            wordBreak: 'break-word',
-            maxWidth: '90%'
-          }}>
-            {currentDisplayName}
-          </div>
-
-          <div style={{ 
             fontSize: '1.15rem', 
             color: '#cbd5e1', 
             fontWeight: '700',
@@ -265,14 +254,11 @@ export default function QueueDisplayPage({ config, onBack }) {
                     }}
                   >
                     <div style={{ paddingRight: '6.5rem' }}>
-                      <div style={{ fontSize: '1.45rem', fontWeight: '900', color: '#ffffff', fontFamily: 'monospace' }}>
+                      <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#ffffff', fontFamily: 'monospace', lineHeight: 1.2 }}>
                         {item.noAntrean || '-'}
                       </div>
-                      <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#cbd5e1' }}>
-                        {item.nama}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                        🏢 {item.instansi} • {item.tujuan}
+                      <div style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: '700', marginTop: '0.15rem' }}>
+                        Tujuan: {item.tujuan}
                       </div>
                     </div>
                     <span style={{ 
