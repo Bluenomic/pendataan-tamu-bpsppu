@@ -101,47 +101,52 @@ export default function QueueDisplayPage({ config, onBack }) {
 
   return (
     <div style={{ 
-      minHeight: '100vh', 
+      height: '100vh',
+      maxHeight: '100vh',
+      width: '100vw',
+      maxWidth: '100vw',
       background: 'linear-gradient(135deg, #011627 0%, #024282 50%, #001f3f 100%)', 
       color: '#ffffff',
       display: 'flex',
       flexDirection: 'column',
       fontFamily: 'sans-serif',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      boxSizing: 'border-box'
     }}>
       
       {/* 1. Header Display TV */}
       <header style={{ 
         background: 'rgba(2, 66, 130, 0.85)', 
         backdropFilter: 'blur(12px)',
-        padding: '1rem 2rem', 
+        padding: '0.65rem 1.5rem', 
         borderBottom: '2px solid rgba(56, 189, 248, 0.3)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '1rem'
+        gap: '0.75rem',
+        boxSizing: 'border-box'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <img 
             src="/logo-bps.png" 
             alt="Logo BPS" 
-            style={{ height: '48px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} 
+            style={{ height: '38px', objectFit: 'contain', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.4))' }} 
           />
           <div>
-            <h1 style={{ fontSize: '1.35rem', fontWeight: '900', margin: 0, letterSpacing: '0.02em', color: '#ffffff', fontStyle: 'italic' }}>
+            <h1 style={{ fontSize: '1.2rem', fontWeight: '900', margin: 0, letterSpacing: '0.02em', color: '#ffffff', fontStyle: 'italic' }}>
               BADAN PUSAT STATISTIK KABUPATEN PENAJAM PASER UTARA
             </h1>
-            <div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#38bdf8', fontStyle: 'italic' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#38bdf8', fontStyle: 'italic' }}>
               DISPLAY ANTREAN PELAYANAN STATISTIK TERPADU (PST)
             </div>
           </div>
         </div>
 
         {/* Real-time Clock */}
-        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.25)', padding: '0.4rem 0.85rem', borderLeft: '3px solid #38bdf8' }}>
-          <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#ffffff', letterSpacing: '0.05em' }}>
+        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.25)', padding: '0.35rem 0.75rem', borderLeft: '3px solid #38bdf8' }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: '900', color: '#ffffff', letterSpacing: '0.05em' }}>
             {timeString}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>
@@ -151,58 +156,70 @@ export default function QueueDisplayPage({ config, onBack }) {
       </header>
 
       {/* 2. Main Content Grid (Hero Active Call & Upcoming Queue List) */}
-      <main style={{ flex: 1, padding: '1.5rem 2rem', display: 'grid', gridTemplateColumns: '1.3fr 1fr', gap: '1.75rem', alignItems: 'stretch' }}>
+      <main style={{ 
+        flex: 1, 
+        padding: '0.85rem 1.25rem', 
+        display: 'grid', 
+        gridTemplateColumns: '1.2fr 1fr', 
+        gap: '1.25rem', 
+        alignItems: 'stretch',
+        minHeight: 0,
+        overflow: 'hidden',
+        boxSizing: 'border-box'
+      }}>
         
         {/* Left Hero Section: Active Queue Being Called */}
         <div style={{ 
           background: isPulse ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.07)', 
           border: isPulse ? '3px solid #38bdf8' : '2px solid rgba(255, 255, 255, 0.15)', 
           backdropFilter: 'blur(16px)',
-          padding: '2.5rem',
+          padding: '1.25rem',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           textAlign: 'center',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-          transition: 'all 0.4s ease'
+          transition: 'all 0.4s ease',
+          minHeight: 0
         }}>
           
           <div style={{ 
             background: 'linear-gradient(90deg, #0284c7 0%, #0369a1 100%)', 
             color: '#ffffff', 
-            padding: '0.45rem 1.5rem', 
-            fontSize: '1rem', 
+            padding: '0.45rem 1.6rem', 
+            fontSize: '1.1rem', 
             fontWeight: '900', 
             letterSpacing: '0.1em',
-            marginBottom: '1.5rem',
+            marginBottom: '1rem',
             boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
           }}>
             DIPANGGIL SAAT INI
           </div>
 
           <div style={{ 
-            fontSize: '6.5rem', 
+            fontSize: '7.5rem', 
             fontWeight: '900', 
             lineHeight: 1,
             letterSpacing: '0.04em', 
             color: '#38bdf8',
-            textShadow: '0 0 35px rgba(56, 189, 248, 0.6)',
-            margin: '0.5rem 0 1.5rem 0',
+            textShadow: '0 0 40px rgba(56, 189, 248, 0.75)',
+            margin: '0.25rem 0 1.25rem 0',
             fontFamily: 'monospace'
           }}>
             {currentDisplayNo}
           </div>
 
           <div style={{ 
-            fontSize: '1.15rem', 
+            fontSize: '1.25rem', 
             color: '#cbd5e1', 
             fontWeight: '700',
             background: 'rgba(255, 255, 255, 0.1)',
-            padding: '0.5rem 1.25rem',
-            border: '1px solid rgba(255, 255, 255, 0.2)'
+            padding: '0.5rem 1.35rem',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
           }}>
-            Tujuan: <span style={{ color: '#38bdf8', fontWeight: '800' }}>{currentDisplayUnit}</span>
+            Tujuan: <span style={{ color: '#38bdf8', fontWeight: '900' }}>{currentDisplayUnit}</span>
           </div>
 
         </div>
@@ -212,36 +229,37 @@ export default function QueueDisplayPage({ config, onBack }) {
           background: 'rgba(255, 255, 255, 0.05)', 
           border: '1px solid rgba(255, 255, 255, 0.15)', 
           backdropFilter: 'blur(16px)',
-          padding: '1.5rem',
+          padding: '1.1rem 1.25rem',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          minHeight: 0
         }}>
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
             <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'space-between', 
-              paddingBottom: '0.85rem', 
+              paddingBottom: '0.65rem', 
               borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
-              marginBottom: '1.25rem'
+              marginBottom: '0.85rem'
             }}>
-              <span style={{ fontSize: '1.1rem', fontWeight: '800', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: '1.1rem', fontWeight: '900', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Layers size={20} color="#38bdf8" /> ANTREAN SELANJUTNYA
               </span>
-              <span style={{ background: '#0284c7', color: '#fff', padding: '0.2rem 0.65rem', fontSize: '0.8rem', fontWeight: '800' }}>
+              <span style={{ background: '#0284c7', color: '#fff', padding: '0.2rem 0.6rem', fontSize: '0.8rem', fontWeight: '800' }}>
                 {waitingQueue.length} Tamu Menunggu
               </span>
             </div>
 
             {waitingQueue.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94a3b8' }}>
-                <CheckCircle2 size={42} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
-                <div style={{ fontSize: '1rem', fontWeight: '700' }}>Semua Tamu Telah Dilayani</div>
-                <p style={{ fontSize: '0.8rem', opacity: 0.8 }}>Belum ada antrean baru yang mendaftar saat ini.</p>
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: '#94a3b8' }}>
+                <CheckCircle2 size={44} style={{ opacity: 0.5, marginBottom: '0.5rem' }} />
+                <div style={{ fontSize: '1.1rem', fontWeight: '700' }}>Semua Tamu Telah Dilayani</div>
+                <p style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '0.25rem' }}>Belum ada antrean baru yang mendaftar saat ini.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '420px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', overflowY: 'hidden', flex: 1, justifyContent: 'center' }}>
                 {waitingQueue.slice(0, 3).map((item, idx) => (
                   <div 
                     key={item.id || idx}
@@ -249,27 +267,27 @@ export default function QueueDisplayPage({ config, onBack }) {
                       position: 'relative',
                       background: 'rgba(255, 255, 255, 0.08)', 
                       borderLeft: '4px solid #38bdf8', 
-                      padding: '0.85rem 1.15rem', 
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+                      padding: '0.65rem 0.95rem', 
+                      boxShadow: '0 3px 8px rgba(0,0,0,0.2)'
                     }}
                   >
-                    <div style={{ paddingRight: '6.5rem' }}>
-                      <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#ffffff', fontFamily: 'monospace', lineHeight: 1.2 }}>
+                    <div style={{ paddingRight: '6rem' }}>
+                      <div style={{ fontSize: '1.8rem', fontWeight: '900', color: '#ffffff', fontFamily: 'monospace', lineHeight: 1.1 }}>
                         {item.noAntrean || '-'}
                       </div>
-                      <div style={{ fontSize: '0.85rem', color: '#38bdf8', fontWeight: '700', marginTop: '0.15rem' }}>
+                      <div style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: '800', marginTop: '0.1rem' }}>
                         Tujuan: {item.tujuan}
                       </div>
                     </div>
                     <span style={{ 
                       position: 'absolute', 
-                      top: '0.85rem', 
-                      right: '1.15rem',
-                      background: 'rgba(56, 189, 248, 0.15)', 
+                      top: '0.65rem', 
+                      right: '0.95rem',
+                      background: 'rgba(56, 189, 248, 0.18)', 
                       color: '#38bdf8', 
-                      border: '1px solid rgba(56, 189, 248, 0.3)', 
-                      padding: '0.25rem 0.6rem', 
-                      fontSize: '0.75rem', 
+                      border: '1.5px solid rgba(56, 189, 248, 0.4)', 
+                      padding: '0.2rem 0.55rem', 
+                      fontSize: '0.8rem', 
                       fontWeight: '800' 
                     }}>
                       Urutan #{idx + 1}
@@ -280,9 +298,9 @@ export default function QueueDisplayPage({ config, onBack }) {
                 {waitingQueue.length > 3 && (
                   <div style={{ 
                     textAlign: 'center', 
-                    padding: '0.65rem 1rem', 
+                    padding: '0.5rem 0.85rem', 
                     background: 'rgba(56, 189, 248, 0.12)', 
-                    border: '1px dashed rgba(56, 189, 248, 0.4)', 
+                    border: '1.5px dashed rgba(56, 189, 248, 0.4)', 
                     color: '#38bdf8', 
                     fontSize: '0.85rem', 
                     fontWeight: '800', 
@@ -297,18 +315,18 @@ export default function QueueDisplayPage({ config, onBack }) {
           </div>
 
           {/* Quick Today's Stats Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255, 255, 255, 0.15)' }}>
-            <div style={{ background: 'rgba(255,255,255,0.06)', padding: '0.75rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: '700' }}>TOTAL HARI INI</div>
-              <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff' }}>{queueData.length}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.6rem', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.15)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.06)', padding: '0.6rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: '800', marginBottom: '0.1rem' }}>TOTAL HARI INI</div>
+              <div style={{ fontSize: '1.45rem', fontWeight: '900', color: '#ffffff' }}>{queueData.length}</div>
             </div>
-            <div style={{ background: 'rgba(22, 163, 74, 0.15)', padding: '0.75rem', textAlign: 'center', border: '1px solid rgba(22, 163, 74, 0.3)' }}>
-              <div style={{ fontSize: '0.7rem', color: '#4ade80', fontWeight: '700' }}>SELESAI DILAYANI</div>
-              <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#4ade80' }}>{finishedCount}</div>
+            <div style={{ background: 'rgba(22, 163, 74, 0.15)', padding: '0.6rem', textAlign: 'center', border: '1px solid rgba(22, 163, 74, 0.3)' }}>
+              <div style={{ fontSize: '0.72rem', color: '#4ade80', fontWeight: '800', marginBottom: '0.1rem' }}>SELESAI DILAYANI</div>
+              <div style={{ fontSize: '1.45rem', fontWeight: '900', color: '#4ade80' }}>{finishedCount}</div>
             </div>
-            <div style={{ background: 'rgba(56, 189, 248, 0.15)', padding: '0.75rem', textAlign: 'center', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
-              <div style={{ fontSize: '0.7rem', color: '#38bdf8', fontWeight: '700' }}>SISA ANTREAN</div>
-              <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#38bdf8' }}>{waitingQueue.length}</div>
+            <div style={{ background: 'rgba(56, 189, 248, 0.15)', padding: '0.6rem', textAlign: 'center', border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+              <div style={{ fontSize: '0.72rem', color: '#38bdf8', fontWeight: '800', marginBottom: '0.1rem' }}>SISA ANTREAN</div>
+              <div style={{ fontSize: '1.45rem', fontWeight: '900', color: '#38bdf8' }}>{waitingQueue.length}</div>
             </div>
           </div>
 
@@ -317,12 +335,12 @@ export default function QueueDisplayPage({ config, onBack }) {
       </main>
 
       {/* 3. Footer Marquee / Running Text */}
-      <footer style={{ background: '#011222', padding: '0.65rem 0', borderTop: '2px solid rgba(56, 189, 248, 0.3)', overflow: 'hidden', whiteSpace: 'nowrap' }}>
+      <footer style={{ background: '#011222', padding: '0.45rem 0', borderTop: '2px solid rgba(56, 189, 248, 0.3)', overflow: 'hidden', whiteSpace: 'nowrap', boxSizing: 'border-box' }}>
         <div style={{ 
           display: 'inline-block', 
           paddingLeft: '100%', 
           animation: 'marquee 30s linear infinite',
-          fontSize: '0.9rem',
+          fontSize: '0.95rem',
           fontWeight: '700',
           color: '#e2e8f0'
         }}>
