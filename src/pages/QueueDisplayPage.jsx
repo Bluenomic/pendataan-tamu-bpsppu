@@ -290,6 +290,22 @@ export default function QueueDisplayPage({ config, onBack }) {
                     </span>
                   </div>
                 ))}
+
+                {waitingQueue.length > 3 && (
+                  <div style={{ 
+                    textAlign: 'center', 
+                    padding: '0.65rem 1rem', 
+                    background: 'rgba(56, 189, 248, 0.12)', 
+                    border: '1px dashed rgba(56, 189, 248, 0.4)', 
+                    color: '#38bdf8', 
+                    fontSize: '0.85rem', 
+                    fontWeight: '800', 
+                    marginTop: '0.25rem',
+                    letterSpacing: '0.01em'
+                  }}>
+                    + Dan {waitingQueue.length - 3} tamu antrean lainnya dalam daftar tunggu
+                  </div>
+                )}
               </div>
             )}
           </div>
