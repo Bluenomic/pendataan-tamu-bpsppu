@@ -124,14 +124,6 @@ export default function QueueDisplayPage({ config, onBack }) {
         gap: '1rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-          {onBack && (
-            <button 
-              onClick={onBack} 
-              style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '0.4rem 0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: '700' }}
-            >
-              <ArrowLeft size={16} /> Kembali
-            </button>
-          )}
           <img 
             src="/logo-bps.png" 
             alt="Logo BPS" 
@@ -147,44 +139,13 @@ export default function QueueDisplayPage({ config, onBack }) {
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-          {/* Sound Toggle Button */}
-          <button 
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            style={{
-              background: soundEnabled ? '#16a34a' : '#dc2626',
-              color: '#ffffff',
-              border: 'none',
-              padding: '0.5rem 1rem',
-              fontWeight: '800',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-            }}
-            title="Aktifkan/Matikan Suara Panggilan"
-          >
-            {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-            <span>{soundEnabled ? 'SUARA AKTIF' : 'SUARA MATI'}</span>
-          </button>
-
-          <button 
-            onClick={handleTestSound}
-            style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', padding: '0.5rem 0.85rem', cursor: 'pointer', fontWeight: '700', fontSize: '0.8rem' }}
-          >
-            🔊 Tes Suara
-          </button>
-
-          {/* Real-time Clock */}
-          <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.25)', padding: '0.4rem 0.85rem', borderLeft: '3px solid #38bdf8' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#ffffff', letterSpacing: '0.05em' }}>
-              {timeString}
-            </div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>
-              {dateString}
-            </div>
+        {/* Real-time Clock */}
+        <div style={{ textAlign: 'right', background: 'rgba(0,0,0,0.25)', padding: '0.4rem 0.85rem', borderLeft: '3px solid #38bdf8' }}>
+          <div style={{ fontSize: '1.25rem', fontWeight: '900', color: '#ffffff', letterSpacing: '0.05em' }}>
+            {timeString}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '600' }}>
+            {dateString}
           </div>
         </div>
       </header>
